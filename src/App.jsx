@@ -1,3 +1,10 @@
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
 import { useState, useEffect, useRef } from "react";
 
 // ── PALETTE (from Pértiga brand guidelines) ──────────────────────────────────
@@ -233,17 +240,27 @@ function Proyectos({ projects, setProjects }) {
 
   const filtrados = filtro === "Todos" ? projects : projects.filter(p => p.tipo === filtro || p.estado === filtro);
 
-  const save = () => {
+  const save = async () => {
     if (!form.nombre || !form.cliente) return;
+    const data = { ...form, monto: Number(form.monto), adelanto: Number(form.adelanto) };
+    delete data.id;
     if (form.id) {
-      setProjects(projects.map(p => p.id === form.id ? { ...form, monto: Number(form.monto), adelanto: Number(form.adelanto) } : p));
+      await supabase.from("proyectos").update(data).eq("id", form.id);
+      setProjects(projects.map(p => p.id === form.id ? { ...data, id: form.id } : p));
     } else {
-      setProjects([...projects, { ...form, id: Date.now(), monto: Number(form.monto), adelanto: Number(form.adelanto) }]);
+      const { data: newP } = await supabase.from("proyectos").insert(data).select().single();
+      setProjects([...projects, newP]);
     }
     setModal(null); setForm(empty);
   };
 
-  const del = (id) => { if (confirm("¿Eliminar proyecto?")) setProjects(projects.filter(p => p.id !== id)); setModal(null); };
+  const del = async (id) => { 
+    if (confirm("¿Eliminar proyecto?")) { 
+      await supabase.from("proyectos").delete().eq("id", id);
+      setProjects(projects.filter(p => p.id !== id)); 
+    }
+    setModal(null); 
+  };
 
   const openEdit = (p) => { setForm({ ...p }); setModal("edit"); };
 
@@ -362,16 +379,28 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
   })).filter(c => c.total > 0).sort((a,b) => b.total - a.total);
   const maxCat = Math.max(...porCat.map(c => c.total), 1);
 
-  const saveIngreso = () => {
+  const saveIngreso = async () => {
     if (!form.desc || !form.monto) return;
-    if (form.id) setIngresos(ingresos.map(i => i.id === form.id ? {...form, monto: Number(form.monto)} : i));
-    else setIngresos([...ingresos, {...form, id: Date.now(), monto: Number(form.monto)}]);
+    const data = { fecha: form.fecha, descripcion: form.desc, monto: Number(form.monto), proyecto: form.proyecto };
+    if (form.id) {
+      await supabase.from("ingresos").update(data).eq("id", form.id);
+      setIngresos(ingresos.map(i => i.id === form.id ? {...form, monto: Number(form.monto)} : i));
+    } else {
+      const { data: newI } = await supabase.from("ingresos").insert(data).select().single();
+      setIngresos([...ingresos, {...newI, desc: newI.descripcion}]);
+    }
     setModal(null);
   };
-  const saveGasto = () => {
+  const saveGasto = async () => {
     if (!form.desc || !form.monto) return;
-    if (form.id) setGastos(gastos.map(g => g.id === form.id ? {...form, monto: Number(form.monto)} : g));
-    else setGastos([...gastos, {...form, id: Date.now(), monto: Number(form.monto)}]);
+    const data = { fecha: form.fecha, descripcion: form.desc, categoria: form.categoria, monto: Number(form.monto), proyecto: form.proyecto };
+    if (form.id) {
+      await supabase.from("gastos").update(data).eq("id", form.id);
+      setGastos(gastos.map(g => g.id === form.id ? {...form, monto: Number(form.monto)} : g));
+    } else {
+      const { data: newG } = await supabase.from("gastos").insert(data).select().single();
+      setGastos([...gastos, {...newG, desc: newG.descripcion}]);
+    }
     setModal(null);
   };
 
@@ -525,16 +554,28 @@ function Proveedores({ proveedores, setProveedores, ocs, setOcs }) {
   const emptyProv = { nombre:"", contacto:"", tel:"", email:"", materiales:"", condicion:"Contado", notas:"" };
   const emptyOC   = { fecha:today, proveedor:"", items:"", monto:"", estado:"Pendiente", proyecto:"" };
 
-  const saveProv = () => {
+  const saveProv = async () => {
     if (!form.nombre) return;
-    if (form.id) setProveedores(proveedores.map(p => p.id===form.id ? form : p));
-    else setProveedores([...proveedores, {...form, id:Date.now()}]);
+    const data = { nombre:form.nombre, contacto:form.contacto, tel:form.tel, email:form.email, materiales:form.materiales, condicion:form.condicion, notas:form.notas };
+    if (form.id) {
+      await supabase.from("proveedores").update(data).eq("id", form.id);
+      setProveedores(proveedores.map(p => p.id===form.id ? {...form} : p));
+    } else {
+      const { data: newP } = await supabase.from("proveedores").insert(data).select().single();
+      setProveedores([...proveedores, newP]);
+    }
     setModal(null);
   };
-  const saveOC = () => {
+  const saveOC = async () => {
     if (!form.proveedor || !form.items) return;
-    if (form.id) setOcs(ocs.map(o => o.id===form.id ? {...form,monto:Number(form.monto)} : o));
-    else setOcs([...ocs, {...form, id:Date.now(), monto:Number(form.monto)}]);
+    const data = { fecha:form.fecha, proveedor:form.proveedor, items:form.items, monto:Number(form.monto), estado:form.estado, proyecto:form.proyecto };
+    if (form.id) {
+      await supabase.from("ordenes_compra").update(data).eq("id", form.id);
+      setOcs(ocs.map(o => o.id===form.id ? {...form,monto:Number(form.monto)} : o));
+    } else {
+      const { data: newO } = await supabase.from("ordenes_compra").insert(data).select().single();
+      setOcs([...ocs, newO]);
+    }
     setModal(null);
   };
 
@@ -666,14 +707,24 @@ function Recordatorios({ recordatorios, setRecordatorios }) {
     .filter(r => filtro==="Todos" ? true : filtro==="Pendientes" ? !r.hecho : r.hecho)
     .sort((a,b) => new Date(a.fecha)-new Date(b.fecha));
 
-  const save = () => {
+  const save = async () => {
     if (!form.texto) return;
-    if (form.id) setRecordatorios(recordatorios.map(r => r.id===form.id ? form : r));
-    else setRecordatorios([...recordatorios, {...form, id:Date.now()}]);
+    const data = { texto: form.texto, fecha: form.fecha, tipo: form.tipo, hecho: form.hecho || false };
+    if (form.id) {
+      await supabase.from("recordatorios").update(data).eq("id", form.id);
+      setRecordatorios(recordatorios.map(r => r.id===form.id ? {...form} : r));
+    } else {
+      const { data: newR } = await supabase.from("recordatorios").insert(data).select().single();
+      setRecordatorios([...recordatorios, newR]);
+    }
     setModal(null);
   };
 
-  const toggle = (id) => setRecordatorios(recordatorios.map(r => r.id===id ? {...r, hecho:!r.hecho} : r));
+  const toggle = async (id) => {
+    const rec = recordatorios.find(r => r.id===id);
+    await supabase.from("recordatorios").update({ hecho: !rec.hecho }).eq("id", id);
+    setRecordatorios(recordatorios.map(r => r.id===id ? {...r, hecho:!r.hecho} : r));
+  };
 
   const urgencyColor = (r) => {
     if (r.hecho) return C.verde;
@@ -901,12 +952,35 @@ function Integraciones() {
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function App() {
   const [tab, setTab] = useState("dashboard");
-  const [projects, setProjects]       = useState(INIT_PROJECTS);
-  const [ingresos, setIngresos]       = useState(INIT_INGRESOS);
-  const [gastos, setGastos]           = useState(INIT_GASTOS);
-  const [proveedores, setProveedores] = useState(INIT_PROVEEDORES);
-  const [ocs, setOcs]                 = useState(INIT_OC);
-  const [recordatorios, setRecordatorios] = useState(INIT_RECORDATORIOS);
+  const [loading, setLoading] = useState(true);
+  const [projects, setProjects]       = useState([]);
+  const [ingresos, setIngresos]       = useState([]);
+  const [gastos, setGastos]           = useState([]);
+  const [proveedores, setProveedores] = useState([]);
+  const [ocs, setOcs]                 = useState([]);
+  const [recordatorios, setRecordatorios] = useState([]);
+
+  // Load all data from Supabase on mount
+  useEffect(() => {
+    async function loadData() {
+      const [p, i, g, prov, oc, rec] = await Promise.all([
+        supabase.from("proyectos").select("*"),
+        supabase.from("ingresos").select("*"),
+        supabase.from("gastos").select("*"),
+        supabase.from("proveedores").select("*"),
+        supabase.from("ordenes_compra").select("*"),
+        supabase.from("recordatorios").select("*"),
+      ]);
+      setProjects(p.data || []);
+      setIngresos((i.data || []).map(r => ({...r, desc: r.descripcion})));
+      setGastos((g.data || []).map(r => ({...r, desc: r.descripcion})));
+      setProveedores(prov.data || []);
+      setOcs(oc.data || []);
+      setRecordatorios(rec.data || []);
+      setLoading(false);
+    }
+    loadData();
+  }, []);
 
   const pendientes = recordatorios.filter(r => !r.hecho && daysLeft(r.fecha) <= 3).length;
   const TABS = [
@@ -918,6 +992,13 @@ export default function App() {
     { id:"recordatorios", label:"Recordatorios",icon:"◷", badge: pendientes },
     { id:"integraciones", label:"Integraciones",icon:"⊙" },
   ];
+
+  if (loading) return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100vh", background:C.crema, flexDirection:"column", gap:16 }}>
+      <div style={{ fontFamily:"'Georgia',serif", fontSize:28, fontWeight:700, color:C.tinta }}>PÉRTIGA</div>
+      <div style={{ color:C.piedra, fontSize:13 }}>Cargando tu panel...</div>
+    </div>
+  );
 
   return (
     <div style={{ fontFamily:"'DM Sans', system-ui, sans-serif", background:C.crema, minHeight:"100vh", display:"flex" }}>
