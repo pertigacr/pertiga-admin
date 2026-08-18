@@ -1,4 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+import { LeadTracker, Taller } from "./modules.jsx";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -959,17 +960,19 @@ export default function App() {
   const [proveedores, setProveedores] = useState([]);
   const [ocs, setOcs]                 = useState([]);
   const [recordatorios, setRecordatorios] = useState([]);
+  const [leads, setLeads] = useState([]);
 
   // Load all data from Supabase on mount
   useEffect(() => {
     async function loadData() {
-      const [p, i, g, prov, oc, rec] = await Promise.all([
+      const [p, i, g, prov, oc, rec, lds] = await Promise.all([
         supabase.from("proyectos").select("*"),
         supabase.from("ingresos").select("*"),
         supabase.from("gastos").select("*"),
         supabase.from("proveedores").select("*"),
         supabase.from("ordenes_compra").select("*"),
         supabase.from("recordatorios").select("*"),
+        supabase.from("leads").select("*"),
       ]);
       setProjects(p.data || []);
       setIngresos((i.data || []).map(r => ({...r, desc: r.descripcion})));
@@ -977,6 +980,7 @@ export default function App() {
       setProveedores(prov.data || []);
       setOcs(oc.data || []);
       setRecordatorios(rec.data || []);
+      setLeads(lds.data || []);
       setLoading(false);
     }
     loadData();
@@ -990,6 +994,8 @@ export default function App() {
     { id:"contabilidad",  label:"Contabilidad", icon:"₡" },
     { id:"proveedores",   label:"Proveedores",  icon:"⊞" },
     { id:"recordatorios", label:"Recordatorios",icon:"◷", badge: pendientes },
+    { id:"leads",         label:"Leads",         icon:"◎" },
+    { id:"taller",        label:"Taller",        icon:"⚙" },
     { id:"integraciones", label:"Integraciones",icon:"⊙" },
   ];
 
@@ -1038,6 +1044,8 @@ export default function App() {
           {tab === "contabilidad"  && <Contabilidad ingresos={ingresos} setIngresos={setIngresos} gastos={gastos} setGastos={setGastos} projects={projects} />}
           {tab === "proveedores"   && <Proveedores proveedores={proveedores} setProveedores={setProveedores} ocs={ocs} setOcs={setOcs} />}
           {tab === "recordatorios" && <Recordatorios recordatorios={recordatorios} setRecordatorios={setRecordatorios} />}
+          {tab === "leads"         && <LeadTracker leads={leads} setLeads={setLeads} supabase={supabase} />}
+          {tab === "taller"        && <Taller supabase={supabase} projects={projects} />}
           {tab === "integraciones" && <Integraciones />}
         </div>
       </div>
