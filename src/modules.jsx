@@ -615,3 +615,700 @@ export function Taller({ supabase, projects }) {
     </div>
   );
 }
+
+// ═══════════════════════════════════════════════════════
+// RECURSO HUMANO
+// ═══════════════════════════════════════════════════════
+const TIPOS_DOC = ["Cédula","Contrato","CCSS","Otros"];
+const ESTADOS_TRABAJADOR = ["Activo","Inactivo","Período de prueba"];
+
+export function RecursoHumano({ supabase }) {
+  const [trabajadores, setTrabajadores] = useState([]);
+  const [pagos, setPagos] = useState([]);
+  const [subtab, setSubtab] = useState("equipo");
+  const [modal, setModal] = useState(null);
+  const [form, setForm] = useState({});
+  const [selectedTrabajador, setSelectedTrabajador] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+
+  const today = new Date().toISOString().split("T")[0];
+  const fmt = n => `₡${Number(n).toLocaleString("es-CR")}`;
+  const fmtDate = d => { if(!d) return ""; const [y,m,dd]=d.split("-"); return `${dd}/${m}/${y}`; };
+
+  useState(() => {
+    async function load() {
+      const [t, p] = await Promise.all([
+        supabase.from("trabajadores").select("*"),
+        supabase.from("pagos_trabajador").select("*"),
+      ]);
+      setTrabajadores(t.data||[]);
+      setPagos(p.data||[]);
+      setLoaded(true);
+    }
+    load();
+  }, []);
+
+  // Horas del mes desde Supabase tiempos
+  const [tiempos, setTiempos] = useState([]);
+  useState(() => {
+    supabase.from("tiempos").select("*").then(r => setTiempos(r.data||[]));
+  }, []);
+
+  const horasPorOperario = (nombre) => {
+    const total = tiempos.filter(t => t.operario === nombre).reduce((s,t) => s+Number(t.minutos), 0);
+    return Math.round(total / 60 * 10) / 10;
+  };
+
+  const pagosTrabajador = (id) => pagos.filter(p => p.trabajador_id === id);
+  const totalPagado = (id) => pagosTrabajador(id).reduce((s,p) => s+Number(p.monto), 0);
+
+  const saveTrabajador = async () => {
+    if (!form.nombre) return;
+    const data = {
+      nombre: form.nombre, rol: form.rol||"Operario", estado: form.estado||"Activo",
+      cedula: form.cedula||"", telefono: form.telefono||"", email: form.email||"",
+      fecha_ingreso: form.fecha_ingreso||today, salario_base: Number(form.salario_base)||0,
+      tipo_pago: form.tipo_pago||"Quincenal", banco: form.banco||"", cuenta: form.cuenta||"",
+      ccss: form.ccss||"", notas: form.notas||""
+    };
+    if (form.id) {
+      await supabase.from("trabajadores").update(data).eq("id", form.id);
+      setTrabajadores(trabajadores.map(t => t.id===form.id ? {...data,id:form.id} : t));
+    } else {
+      const { data: newT } = await supabase.from("trabajadores").insert(data).select().single();
+      setTrabajadores([...trabajadores, newT]);
+    }
+    setModal(null);
+  };
+
+  const savePago = async () => {
+    if (!form.monto || !form.trabajador_id) return;
+    const data = {
+      trabajador_id: form.trabajador_id, fecha: form.fecha||today,
+      monto: Number(form.monto), tipo: form.tipo||"Quincenal",
+      horas_referencia: Number(form.horas_referencia)||0,
+      descripcion: form.descripcion||"", periodo: form.periodo||""
+    };
+    if (form.id) {
+      await supabase.from("pagos_trabajador").update(data).eq("id", form.id);
+      setPagos(pagos.map(p => p.id===form.id ? {...data,id:form.id} : p));
+    } else {
+      const { data: newP } = await supabase.from("pagos_trabajador").insert(data).select().single();
+      setPagos([...pagos, newP]);
+    }
+    setModal(null);
+  };
+
+  const SubTab = ({id,label,icon}) => (
+    <button onClick={()=>setSubtab(id)} style={{padding:"7px 14px",borderRadius:6,fontSize:12,fontWeight:600,cursor:"pointer",border:"none",background:subtab===id?"#1A1714":"transparent",color:subtab===id?"#F5F0E8":"#8A8278",display:"flex",alignItems:"center",gap:5}}>
+      <span>{icon}</span><span>{label}</span>
+    </button>
+  );
+
+  const totalNomina = trabajadores.filter(t=>t.estado==="Activo").reduce((s,t)=>s+Number(t.salario_base),0);
+  const totalPagadoMes = pagos.filter(p=>{
+    const d = new Date(p.fecha);
+    const now = new Date();
+    return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+  }).reduce((s,p)=>s+Number(p.monto),0);
+
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div style={{fontFamily:"'Georgia',serif",fontSize:20,fontWeight:700,color:"#1A1714"}}>Recurso Humano</div>
+        <div style={{display:"flex",gap:8}}>
+          {subtab==="equipo" && <button onClick={()=>{setForm({estado:"Activo",tipo_pago:"Quincenal",fecha_ingreso:today});setModal("trabajador");}} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>+ Trabajador</button>}
+          {subtab==="pagos" && <button onClick={()=>{setForm({fecha:today,tipo:"Quincenal",trabajador_id:trabajadores[0]?.id||""});setModal("pago");}} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>+ Registrar pago</button>}
+        </div>
+      </div>
+
+      {/* KPIs */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>
+        {[
+          {l:"Equipo activo",v:trabajadores.filter(t=>t.estado==="Activo").length+" personas",c:"#1A1714"},
+          {l:"Nómina base",v:fmt(totalNomina),c:"#3D5A52"},
+          {l:"Pagado este mes",v:fmt(totalPagadoMes),c:"#C8A96E"},
+          {l:"Horas registradas",v:tiempos.reduce((s,t)=>s+Number(t.minutos),0)/60|0+"h total",c:"#2980B9"},
+        ].map(k=>(
+          <div key={k.l} style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:"12px 14px"}}>
+            <div style={{fontSize:10,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.4,fontWeight:600,marginBottom:3}}>{k.l}</div>
+            <div style={{fontFamily:"'Georgia',serif",fontSize:18,fontWeight:700,color:k.c}}>{k.v}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{display:"flex",gap:6,marginBottom:16,background:"#F0EAE0",borderRadius:8,padding:4}}>
+        <SubTab id="equipo" label="Equipo" icon="👤"/>
+        <SubTab id="pagos" label="Pagos" icon="₡"/>
+        <SubTab id="horas" label="Horas" icon="⏱"/>
+      </div>
+
+      {/* EQUIPO */}
+      {subtab==="equipo" && (
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {trabajadores.length===0 && <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:32,textAlign:"center",color:"#8A8278",fontSize:13}}>No hay trabajadores registrados</div>}
+          {trabajadores.map(t => {
+            const horas = horasPorOperario(t.nombre);
+            const pagadoTotal = totalPagado(t.id);
+            const estadoColor = t.estado==="Activo"?"#27AE60":t.estado==="Período de prueba"?"#E67E22":"#8A8278";
+            return (
+              <div key={t.id} style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:"16px 18px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                  <div style={{flex:1}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                      <div style={{width:36,height:36,borderRadius:"50%",background:"#1A1714",color:"#C8A96E",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>
+                        {t.nombre.charAt(0)}
+                      </div>
+                      <div>
+                        <div style={{fontWeight:700,fontSize:14,color:"#1A1714"}}>{t.nombre}</div>
+                        <div style={{fontSize:12,color:"#8A8278"}}>{t.rol}</div>
+                      </div>
+                      <span style={{background:t.estado==="Activo"?"#EAFAF1":t.estado==="Período de prueba"?"#FEF0E6":"#F5F0E8",color:estadoColor,borderRadius:4,padding:"2px 8px",fontSize:11,fontWeight:600}}>{t.estado}</span>
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginTop:10}}>
+                      <div style={{background:"#F5F0E8",borderRadius:6,padding:"8px 12px"}}>
+                        <div style={{fontSize:10,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>Salario base</div>
+                        <div style={{fontWeight:700,color:"#1A1714",fontSize:13}}>{fmt(t.salario_base)}</div>
+                        <div style={{fontSize:10,color:"#8A8278"}}>{t.tipo_pago}</div>
+                      </div>
+                      <div style={{background:"#F5F0E8",borderRadius:6,padding:"8px 12px"}}>
+                        <div style={{fontSize:10,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>Horas registradas</div>
+                        <div style={{fontWeight:700,color:"#2980B9",fontSize:13}}>{horas}h</div>
+                        <div style={{fontSize:10,color:"#8A8278"}}>En el sistema</div>
+                      </div>
+                      <div style={{background:"#F5F0E8",borderRadius:6,padding:"8px 12px"}}>
+                        <div style={{fontSize:10,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>Total pagado</div>
+                        <div style={{fontWeight:700,color:"#3D5A52",fontSize:13}}>{fmt(pagadoTotal)}</div>
+                        <div style={{fontSize:10,color:"#8A8278"}}>{pagosTrabajador(t.id).length} pagos</div>
+                      </div>
+                    </div>
+                    {t.telefono && <div style={{fontSize:11,color:"#8A8278",marginTop:8}}>📞 {t.telefono}{t.email && ` · ✉ ${t.email}`}</div>}
+                    {t.fecha_ingreso && <div style={{fontSize:11,color:"#8A8278",marginTop:2}}>Ingreso: {fmtDate(t.fecha_ingreso)}{t.ccss && ` · CCSS: ${t.ccss}`}</div>}
+                    {t.notas && <div style={{fontSize:11,color:"#8A8278",marginTop:4,fontStyle:"italic"}}>{t.notas}</div>}
+                  </div>
+                  <button onClick={()=>{setForm({...t});setModal("trabajador");}} style={{background:"none",border:"none",cursor:"pointer",color:"#8A8278",fontSize:14,marginLeft:12}}>✏</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* PAGOS */}
+      {subtab==="pagos" && (
+        <div>
+          <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,overflow:"hidden"}}>
+            {pagos.length===0 && <div style={{padding:32,textAlign:"center",color:"#8A8278",fontSize:13}}>Sin pagos registrados</div>}
+            {[...pagos].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).map((p,i)=>{
+              const trab = trabajadores.find(t=>t.id===p.trabajador_id);
+              return (
+                <div key={p.id} onClick={()=>{setForm({...p});setModal("pago");}}
+                  style={{padding:"12px 18px",borderBottom:i<pagos.length-1?"1px solid #F5F0E8":"none",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}
+                  onMouseEnter={e=>e.currentTarget.style.background="#F5F0E8"}
+                  onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                  <div>
+                    <div style={{fontWeight:700,fontSize:13,color:"#1A1714"}}>{trab?.nombre||"—"}</div>
+                    <div style={{fontSize:11,color:"#8A8278"}}>{fmtDate(p.fecha)} · {p.tipo}{p.periodo&&` · ${p.periodo}`}</div>
+                    {p.horas_referencia>0 && <div style={{fontSize:11,color:"#2980B9"}}>{p.horas_referencia}h de referencia</div>}
+                    {p.descripcion && <div style={{fontSize:11,color:"#8A8278",fontStyle:"italic"}}>{p.descripcion}</div>}
+                  </div>
+                  <div style={{fontWeight:700,color:"#3D5A52",fontSize:15}}>{fmt(p.monto)}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Resumen por trabajador */}
+          <div style={{marginTop:16,background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:16}}>
+            <div style={{fontWeight:700,fontSize:13,color:"#1A1714",marginBottom:12}}>Resumen por trabajador</div>
+            {trabajadores.map(t=>(
+              <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #F5F0E8"}}>
+                <div>
+                  <div style={{fontSize:13,fontWeight:600,color:"#1A1714"}}>{t.nombre}</div>
+                  <div style={{fontSize:11,color:"#8A8278"}}>{pagosTrabajador(t.id).length} pagos registrados</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontWeight:700,color:"#3D5A52",fontSize:14}}>{fmt(totalPagado(t.id))}</div>
+                  <div style={{fontSize:11,color:"#8A8278"}}>Base: {fmt(t.salario_base)}/{t.tipo_pago}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* HORAS */}
+      {subtab==="horas" && (
+        <div>
+          <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:16,marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:13,color:"#1A1714",marginBottom:12}}>Horas por trabajador (acumulado)</div>
+            {trabajadores.map(t=>{
+              const horas = horasPorOperario(t.nombre);
+              const registros = tiempos.filter(x=>x.operario===t.nombre);
+              const maxH = Math.max(...trabajadores.map(x=>horasPorOperario(x.nombre)),1);
+              return (
+                <div key={t.id} style={{marginBottom:14}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                    <span style={{fontSize:13,fontWeight:600,color:"#1A1714"}}>{t.nombre}</span>
+                    <span style={{fontSize:13,color:"#8A8278"}}>{horas}h · {registros.length} registros</span>
+                  </div>
+                  <div style={{background:"#E8E2D8",borderRadius:4,height:8}}>
+                    <div style={{background:"#C8A96E",width:`${Math.round(horas/maxH*100)}%`,height:"100%",borderRadius:4}}/>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Detalle de registros */}
+          <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,overflow:"hidden"}}>
+            <div style={{padding:"12px 18px",borderBottom:"1px solid #F5F0E8",fontWeight:700,fontSize:13,color:"#1A1714"}}>Últimos registros de tiempo</div>
+            {[...tiempos].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).slice(0,20).map((t,i)=>(
+              <div key={t.id} style={{padding:"10px 18px",borderBottom:i<19?"1px solid #F5F0E8":"none",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:13,fontWeight:600,color:"#1A1714"}}>{t.descripcion}</div>
+                  <div style={{fontSize:11,color:"#8A8278"}}>{t.operario} · {fmtDate(t.fecha)}{t.proyecto&&` · ${t.proyecto}`}</div>
+                </div>
+                <div style={{fontFamily:"'Georgia',serif",fontSize:15,fontWeight:700,color:"#3D5A52"}}>{t.minutos}min</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Modal trabajador */}
+      {modal==="trabajador" && (
+        <div style={{position:"fixed",inset:0,background:"rgba(26,23,20,0.55)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+          <div style={{background:"#FDFCFA",borderRadius:12,width:"100%",maxWidth:540,maxHeight:"88vh",overflow:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.25)"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 24px 14px",borderBottom:"1px solid #F5F0E8"}}>
+              <span style={{fontFamily:"'Georgia',serif",fontSize:17,fontWeight:600,color:"#1A1714"}}>{form.id?"Editar trabajador":"Nuevo trabajador"}</span>
+              <button onClick={()=>setModal(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#8A8278"}}>×</button>
+            </div>
+            <div style={{padding:"20px 24px 24px"}}>
+              {[
+                {l:"Nombre completo",k:"nombre",ph:"Ej: Carlos Vargas"},
+                {l:"Cédula",k:"cedula",ph:"1-1234-5678"},
+                {l:"Teléfono",k:"telefono",ph:"8888-1234"},
+                {l:"Email",k:"email",ph:"correo@ejemplo.com"},
+              ].map(f=>(
+                <div key={f.k} style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>{f.l}</div>
+                  <input value={form[f.k]||""} onChange={e=>setForm({...form,[f.k]:e.target.value})} placeholder={f.ph} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+              ))}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Rol</div>
+                  <select value={form.rol||"Operario"} onChange={e=>setForm({...form,rol:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
+                    {["Operario","Ayudante","Laqueador","Instalador","Administrativo"].map(r=><option key={r}>{r}</option>)}
+                  </select>
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Estado</div>
+                  <select value={form.estado||"Activo"} onChange={e=>setForm({...form,estado:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
+                    {ESTADOS_TRABAJADOR.map(s=><option key={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Salario base (₡)</div>
+                  <input type="number" value={form.salario_base||""} onChange={e=>setForm({...form,salario_base:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Tipo de pago</div>
+                  <select value={form.tipo_pago||"Quincenal"} onChange={e=>setForm({...form,tipo_pago:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
+                    {["Semanal","Quincenal","Mensual","Por hora","Por proyecto"].map(t=><option key={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Fecha ingreso</div>
+                  <input type="date" value={form.fecha_ingreso||today} onChange={e=>setForm({...form,fecha_ingreso:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>N° CCSS</div>
+                  <input value={form.ccss||""} onChange={e=>setForm({...form,ccss:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Banco</div>
+                  <input value={form.banco||""} onChange={e=>setForm({...form,banco:e.target.value})} placeholder="Banco Nacional, BCR..." style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>N° Cuenta</div>
+                  <input value={form.cuenta||""} onChange={e=>setForm({...form,cuenta:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+              </div>
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Notas</div>
+                <textarea value={form.notas||""} onChange={e=>setForm({...form,notas:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:60}}/>
+              </div>
+              <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar trabajador?")){await supabase.from("trabajadores").delete().eq("id",form.id);setTrabajadores(trabajadores.filter(t=>t.id!==form.id));setModal(null);}}} style={{background:"#FDECEA",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
+                <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#1A1714",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
+                <button onClick={saveTrabajador} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal pago */}
+      {modal==="pago" && (
+        <div style={{position:"fixed",inset:0,background:"rgba(26,23,20,0.55)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+          <div style={{background:"#FDFCFA",borderRadius:12,width:"100%",maxWidth:480,maxHeight:"88vh",overflow:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.25)"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 24px 14px",borderBottom:"1px solid #F5F0E8"}}>
+              <span style={{fontFamily:"'Georgia',serif",fontSize:17,fontWeight:600,color:"#1A1714"}}>{form.id?"Editar pago":"Registrar pago"}</span>
+              <button onClick={()=>setModal(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#8A8278"}}>×</button>
+            </div>
+            <div style={{padding:"20px 24px 24px"}}>
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Trabajador</div>
+                <select value={form.trabajador_id||""} onChange={e=>setForm({...form,trabajador_id:Number(e.target.value)})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
+                  <option value="">Seleccionar...</option>
+                  {trabajadores.map(t=><option key={t.id} value={t.id}>{t.nombre}</option>)}
+                </select>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Monto (₡)</div>
+                  <input type="number" value={form.monto||""} onChange={e=>setForm({...form,monto:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Fecha</div>
+                  <input type="date" value={form.fecha||today} onChange={e=>setForm({...form,fecha:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Tipo de pago</div>
+                  <select value={form.tipo||"Quincenal"} onChange={e=>setForm({...form,tipo:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
+                    {["Semanal","Quincenal","Mensual","Por hora","Por proyecto","Adelanto","Liquidación"].map(t=><option key={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Horas de referencia</div>
+                  <input type="number" value={form.horas_referencia||""} onChange={e=>setForm({...form,horas_referencia:e.target.value})} placeholder="0" style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+              </div>
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Período</div>
+                <input value={form.periodo||""} onChange={e=>setForm({...form,periodo:e.target.value})} placeholder="Ej: 1-15 agosto 2026" style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+              </div>
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Descripción</div>
+                <textarea value={form.descripcion||""} onChange={e=>setForm({...form,descripcion:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:60}}/>
+              </div>
+              <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar?")){await supabase.from("pagos_trabajador").delete().eq("id",form.id);setPagos(pagos.filter(p=>p.id!==form.id));setModal(null);}}} style={{background:"#FDECEA",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
+                <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#1A1714",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
+                <button onClick={savePago} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// MARKETING
+// ═══════════════════════════════════════════════════════
+const CANALES = ["Instagram","Facebook","WhatsApp","Google Ads","Referido","Feria/Evento","Web","Otro"];
+const TIPOS_CAMPAÑA = ["Orgánico","Pauta pagada","Email","Evento","Contenido","Otro"];
+const ESTADOS_CAMPAÑA = ["Planificada","Activa","Pausada","Finalizada"];
+
+export function Marketing({ supabase, leads, gastos }) {
+  const [campanas, setCampanas] = useState([]);
+  const [subtab, setSubtab] = useState("campanas");
+  const [modal, setModal] = useState(null);
+  const [form, setForm] = useState({});
+  const [loaded, setLoaded] = useState(false);
+
+  const today = new Date().toISOString().split("T")[0];
+  const fmt = n => `₡${Number(n).toLocaleString("es-CR")}`;
+  const fmtDate = d => { if(!d) return ""; const [y,m,dd]=d.split("-"); return `${dd}/${m}/${y}`; };
+
+  useState(() => {
+    supabase.from("campanas_marketing").select("*").then(r => {
+      setCampanas(r.data||[]);
+      setLoaded(true);
+    });
+  }, []);
+
+  // Gastos de marketing desde contabilidad
+  const gastosMarketing = gastos.filter(g => g.categoria === "Marketing");
+  const totalGastosMkt = gastosMarketing.reduce((s,g) => s+Number(g.monto), 0);
+
+  // Leads por fuente
+  const leadsPorCanal = CANALES.map(canal => ({
+    canal,
+    total: leads.filter(l => l.fuente === canal).length,
+    ganados: leads.filter(l => l.fuente === canal && l.estado === "Cerrado ganado").length,
+    valor: leads.filter(l => l.fuente === canal && l.estado === "Cerrado ganado").reduce((s,l) => s+Number(l.monto_estimado||0), 0),
+  })).filter(c => c.total > 0);
+
+  const totalLeads = leads.length;
+  const leadsGanados = leads.filter(l => l.estado === "Cerrado ganado").length;
+  const valorGanado = leads.filter(l => l.estado === "Cerrado ganado").reduce((s,l) => s+Number(l.monto_estimado||0), 0);
+  const tasaConversion = totalLeads > 0 ? Math.round(leadsGanados/totalLeads*100) : 0;
+  const costoPorLead = totalLeads > 0 ? Math.round(totalGastosMkt/totalLeads) : 0;
+
+  const saveCampana = async () => {
+    if (!form.nombre) return;
+    const data = {
+      nombre: form.nombre, canal: form.canal||"Instagram", tipo: form.tipo||"Orgánico",
+      estado: form.estado||"Planificada", objetivo: form.objetivo||"",
+      presupuesto: Number(form.presupuesto)||0, gasto_real: Number(form.gasto_real)||0,
+      fecha_inicio: form.fecha_inicio||today, fecha_fin: form.fecha_fin||"",
+      leads_generados: Number(form.leads_generados)||0, ventas_atribuidas: Number(form.ventas_atribuidas)||0,
+      notas: form.notas||""
+    };
+    if (form.id) {
+      await supabase.from("campanas_marketing").update(data).eq("id", form.id);
+      setCampanas(campanas.map(c => c.id===form.id ? {...data,id:form.id} : c));
+    } else {
+      const { data: newC } = await supabase.from("campanas_marketing").insert(data).select().single();
+      setCampanas([...campanas, newC]);
+    }
+    setModal(null);
+  };
+
+  const SubTab = ({id,label,icon}) => (
+    <button onClick={()=>setSubtab(id)} style={{padding:"7px 14px",borderRadius:6,fontSize:12,fontWeight:600,cursor:"pointer",border:"none",background:subtab===id?"#1A1714":"transparent",color:subtab===id?"#F5F0E8":"#8A8278",display:"flex",alignItems:"center",gap:5}}>
+      <span>{icon}</span><span>{label}</span>
+    </button>
+  );
+
+  const estadoColor = {
+    "Activa":{"bg":"#EAFAF1","text":"#27AE60"},
+    "Planificada":{"bg":"#EAF2FB","text":"#2980B9"},
+    "Pausada":{"bg":"#FEF9EC","text":"#B8860B"},
+    "Finalizada":{"bg":"#F5F0E8","text":"#8A8278"},
+  };
+
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div style={{fontFamily:"'Georgia',serif",fontSize:20,fontWeight:700,color:"#1A1714"}}>Marketing</div>
+        {subtab==="campanas" && <button onClick={()=>{setForm({estado:"Planificada",canal:"Instagram",tipo:"Orgánico",fecha_inicio:today});setModal("campana");}} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>+ Nueva campaña</button>}
+      </div>
+
+      {/* KPIs */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>
+        {[
+          {l:"Gasto en marketing",v:fmt(totalGastosMkt),c:"#C0392B"},
+          {l:"Total leads",v:totalLeads,c:"#2980B9"},
+          {l:"Tasa conversión",v:tasaConversion+"%",c:"#3D5A52"},
+          {l:"Costo por lead",v:costoPorLead>0?fmt(costoPorLead):"—",c:"#C8A96E"},
+        ].map(k=>(
+          <div key={k.l} style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:"12px 14px"}}>
+            <div style={{fontSize:10,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.4,fontWeight:600,marginBottom:3}}>{k.l}</div>
+            <div style={{fontFamily:"'Georgia',serif",fontSize:18,fontWeight:700,color:k.c}}>{k.v}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{display:"flex",gap:6,marginBottom:16,background:"#F0EAE0",borderRadius:8,padding:4}}>
+        <SubTab id="campanas" label="Campañas" icon="📣"/>
+        <SubTab id="canales" label="Canales" icon="📊"/>
+        <SubTab id="gastos" label="Gastos" icon="₡"/>
+      </div>
+
+      {/* CAMPAÑAS */}
+      {subtab==="campanas" && (
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {campanas.length===0 && <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:32,textAlign:"center",color:"#8A8278",fontSize:13}}>No hay campañas registradas</div>}
+          {campanas.map(c => {
+            const roi = c.gasto_real > 0 ? Math.round((c.ventas_atribuidas - c.gasto_real) / c.gasto_real * 100) : null;
+            const sc = estadoColor[c.estado] || {bg:"#F5F0E8",text:"#8A8278"};
+            return (
+              <div key={c.id} style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:"14px 18px",cursor:"pointer"}}
+                onClick={()=>{setForm({...c});setModal("campana");}}
+                onMouseEnter={e=>e.currentTarget.style.borderColor="#C8A96E"}
+                onMouseLeave={e=>e.currentTarget.style.borderColor="#E8E2D8"}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+                  <div>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                      <span style={{fontWeight:700,fontSize:14,color:"#1A1714"}}>{c.nombre}</span>
+                      <span style={{background:sc.bg,color:sc.text,borderRadius:4,padding:"2px 8px",fontSize:11,fontWeight:600}}>{c.estado}</span>
+                    </div>
+                    <div style={{fontSize:12,color:"#8A8278"}}>{c.canal} · {c.tipo}{c.fecha_inicio&&` · ${fmtDate(c.fecha_inicio)}`}{c.fecha_fin&&` → ${fmtDate(c.fecha_fin)}`}</div>
+                    {c.objetivo && <div style={{fontSize:12,color:"#1A1714",marginTop:4,fontStyle:"italic"}}>{c.objetivo}</div>}
+                  </div>
+                  {roi !== null && (
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontSize:10,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.4}}>ROI</div>
+                      <div style={{fontFamily:"'Georgia',serif",fontSize:22,fontWeight:700,color:roi>=0?"#27AE60":"#C0392B"}}>{roi}%</div>
+                    </div>
+                  )}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+                  {[
+                    {l:"Presupuesto",v:fmt(c.presupuesto)},
+                    {l:"Gasto real",v:fmt(c.gasto_real)},
+                    {l:"Leads",v:c.leads_generados},
+                    {l:"Ventas atribuidas",v:fmt(c.ventas_atribuidas)},
+                  ].map(k=>(
+                    <div key={k.l} style={{background:"#F5F0E8",borderRadius:6,padding:"6px 10px"}}>
+                      <div style={{fontSize:9,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.3,marginBottom:1}}>{k.l}</div>
+                      <div style={{fontSize:13,fontWeight:700,color:"#1A1714"}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                {c.notas && <div style={{fontSize:11,color:"#8A8278",marginTop:8,fontStyle:"italic"}}>{c.notas}</div>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* CANALES */}
+      {subtab==="canales" && (
+        <div>
+          <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:18,marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:13,color:"#1A1714",marginBottom:14}}>Leads por canal de origen</div>
+            {leadsPorCanal.length===0 && <div style={{color:"#8A8278",fontSize:13}}>No hay leads con canal registrado todavía</div>}
+            {leadsPorCanal.sort((a,b)=>b.total-a.total).map(c => {
+              const maxTotal = Math.max(...leadsPorCanal.map(x=>x.total),1);
+              const convRate = c.total>0 ? Math.round(c.ganados/c.total*100) : 0;
+              return (
+                <div key={c.canal} style={{marginBottom:14}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                    <span style={{fontSize:13,fontWeight:600,color:"#1A1714"}}>{c.canal}</span>
+                    <div style={{display:"flex",gap:16,fontSize:12,color:"#8A8278"}}>
+                      <span>{c.total} leads</span>
+                      <span style={{color:"#27AE60"}}>{c.ganados} ganados ({convRate}%)</span>
+                      {c.valor>0 && <span style={{color:"#3D5A52",fontWeight:600}}>{fmt(c.valor)}</span>}
+                    </div>
+                  </div>
+                  <div style={{background:"#E8E2D8",borderRadius:4,height:8,position:"relative"}}>
+                    <div style={{background:"#C8A96E",width:`${Math.round(c.total/maxTotal*100)}%`,height:"100%",borderRadius:4}}/>
+                    <div style={{background:"#27AE60",width:`${Math.round(c.ganados/maxTotal*100)}%`,height:"100%",borderRadius:4,position:"absolute",top:0,opacity:0.6}}/>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Resumen de conversión */}
+          <div style={{background:"#1A1714",borderRadius:10,padding:"16px 20px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
+            {[
+              {l:"Pipeline total",v:fmt(leads.reduce((s,l)=>s+Number(l.monto_estimado||0),0)),c:"#F5F0E8"},
+              {l:"Valor ganado",v:fmt(valorGanado),c:"#C8A96E"},
+              {l:"Retorno sobre gasto",v:totalGastosMkt>0?`${Math.round(valorGanado/totalGastosMkt*100)}%`:"—",c:"#C8A96E"},
+            ].map(k=>(
+              <div key={k.l}>
+                <div style={{fontSize:10,color:"rgba(245,240,232,0.4)",textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{k.l}</div>
+                <div style={{fontFamily:"'Georgia',serif",fontSize:20,fontWeight:700,color:k.c}}>{k.v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* GASTOS */}
+      {subtab==="gastos" && (
+        <div>
+          <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,overflow:"hidden",marginBottom:12}}>
+            <div style={{padding:"12px 18px",borderBottom:"1px solid #F5F0E8",fontWeight:700,fontSize:13,color:"#1A1714"}}>
+              Gastos de marketing — {fmt(totalGastosMkt)} total
+            </div>
+            {gastosMarketing.length===0 && <div style={{padding:24,color:"#8A8278",fontSize:13,textAlign:"center"}}>Sin gastos de marketing registrados. Agregálos desde el módulo de Contabilidad con categoría "Marketing".</div>}
+            {[...gastosMarketing].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).map((g,i)=>(
+              <div key={g.id} style={{padding:"11px 18px",borderBottom:i<gastosMarketing.length-1?"1px solid #F5F0E8":"none",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:13,fontWeight:600,color:"#1A1714"}}>{g.desc||g.descripcion}</div>
+                  <div style={{fontSize:11,color:"#8A8278"}}>{fmtDate(g.fecha)}{g.proyecto&&` · ${g.proyecto}`}</div>
+                </div>
+                <div style={{fontWeight:700,color:"#C0392B",fontSize:14}}>{fmt(g.monto)}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{background:"#FEF9EC",border:"1px solid #F0D080",borderRadius:8,padding:"10px 16px",fontSize:12,color:"#B8860B"}}>
+            💡 Para agregar gastos de marketing, usá el botón <strong>+ Gasto</strong> en el módulo de Contabilidad y seleccioná la categoría <strong>Marketing</strong>.
+          </div>
+        </div>
+      )}
+
+      {/* Modal campaña */}
+      {modal==="campana" && (
+        <div style={{position:"fixed",inset:0,background:"rgba(26,23,20,0.55)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+          <div style={{background:"#FDFCFA",borderRadius:12,width:"100%",maxWidth:540,maxHeight:"88vh",overflow:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.25)"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 24px 14px",borderBottom:"1px solid #F5F0E8"}}>
+              <span style={{fontFamily:"'Georgia',serif",fontSize:17,fontWeight:600,color:"#1A1714"}}>{form.id?"Editar campaña":"Nueva campaña"}</span>
+              <button onClick={()=>setModal(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#8A8278"}}>×</button>
+            </div>
+            <div style={{padding:"20px 24px 24px"}}>
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Nombre de la campaña</div>
+                <input value={form.nombre||""} onChange={e=>setForm({...form,nombre:e.target.value})} placeholder="Ej: Instagram Ads - Butaca julio" style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                {[
+                  {l:"Canal",k:"canal",opts:CANALES},
+                  {l:"Tipo",k:"tipo",opts:TIPOS_CAMPAÑA},
+                  {l:"Estado",k:"estado",opts:ESTADOS_CAMPAÑA},
+                ].map(f=>(
+                  <div key={f.k} style={{marginBottom:14}}>
+                    <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>{f.l}</div>
+                    <select value={form[f.k]||f.opts[0]} onChange={e=>setForm({...form,[f.k]:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
+                      {f.opts.map(o=><option key={o}>{o}</option>)}
+                    </select>
+                  </div>
+                ))}
+              </div>
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Objetivo</div>
+                <input value={form.objetivo||""} onChange={e=>setForm({...form,objetivo:e.target.value})} placeholder="Ej: Generar consultas para TV Walls" style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Fecha inicio</div>
+                  <input type="date" value={form.fecha_inicio||today} onChange={e=>setForm({...form,fecha_inicio:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Fecha fin</div>
+                  <input type="date" value={form.fecha_fin||""} onChange={e=>setForm({...form,fecha_fin:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Presupuesto (₡)</div>
+                  <input type="number" value={form.presupuesto||""} onChange={e=>setForm({...form,presupuesto:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Gasto real (₡)</div>
+                  <input type="number" value={form.gasto_real||""} onChange={e=>setForm({...form,gasto_real:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Leads generados</div>
+                  <input type="number" value={form.leads_generados||""} onChange={e=>setForm({...form,leads_generados:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Ventas atribuidas (₡)</div>
+                  <input type="number" value={form.ventas_atribuidas||""} onChange={e=>setForm({...form,ventas_atribuidas:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+              </div>
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Notas</div>
+                <textarea value={form.notas||""} onChange={e=>setForm({...form,notas:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:60}}/>
+              </div>
+              <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar?")){await supabase.from("campanas_marketing").delete().eq("id",form.id);setCampanas(campanas.filter(c=>c.id!==form.id));setModal(null);}}} style={{background:"#FDECEA",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
+                <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#1A1714",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
+                <button onClick={saveCampana} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
