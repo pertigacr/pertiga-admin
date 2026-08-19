@@ -29,20 +29,14 @@ export default async function handler(req, res) {
     let result;
 
     if (action === 'get_invoices') {
-      // Fetch all invoice statuses separately to avoid filter errors
-      const statuses = ['sent', 'draft', 'overdue', 'paid', 'partially_paid'];
-      let allInvoices = [];
-      for (const status of statuses) {
-        const r = await fetch(`${base}/invoices?organization_id=${orgId}&filter_by=Status.${status}&per_page=100`, { headers });
-        const data = await r.json();
-        if (data.invoices) allInvoices = [...allInvoices, ...data.invoices];
-      }
-      result = { invoices: allInvoices };
+      // No filter_by — get all invoices
+      const r = await fetch(`${base}/invoices?organization_id=${orgId}&per_page=200`, { headers });
+      result = await r.json();
     } else if (action === 'get_expenses') {
-      const r = await fetch(`${base}/expenses?organization_id=${orgId}&per_page=100`, { headers });
+      const r = await fetch(`${base}/expenses?organization_id=${orgId}&per_page=200`, { headers });
       result = await r.json();
     } else if (action === 'get_contacts') {
-      const r = await fetch(`${base}/contacts?organization_id=${orgId}&per_page=100`, { headers });
+      const r = await fetch(`${base}/contacts?organization_id=${orgId}&per_page=200`, { headers });
       result = await r.json();
     } else if (action === 'create_invoice') {
       const r = await fetch(`${base}/invoices?organization_id=${orgId}`, {
