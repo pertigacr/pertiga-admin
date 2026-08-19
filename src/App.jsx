@@ -391,31 +391,31 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
       const expData = await expRes.json();
       const expenses = expData.expenses || [];
 
-      // Map and upsert invoices to ingresos
-      for (const inv of invoices) {
+      // Insert invoices — tag them with zoho_ prefix to avoid duplicates
+      const invRows = invoices.map(inv => {
         const cobrado = Number(inv.total) - Number(inv.balance);
-        const data = {
+        return {
           fecha: inv.date,
-          descripcion: `${inv.customer_name} - ${inv.invoice_number}`,
+          descripcion: `[Zoho] ${inv.customer_name} - ${inv.invoice_number}`,
           monto: cobrado > 0 ? cobrado : Number(inv.total),
           proyecto: inv.customer_name || ""
         };
-        if (data.monto > 0) {
-          await supabase.from("ingresos").upsert(data, { onConflict: "descripcion,fecha" });
-        }
-      }
+      }).filter(r => r.monto > 0);
 
-      // Map and upsert expenses to gastos
-      for (const exp of expenses) {
-        const data = {
-          fecha: exp.date,
-          descripcion: exp.description || exp.vendor_name,
-          categoria: exp.account_name || "Operativo",
-          monto: Number(exp.total),
-          proyecto: exp.reference_number || ""
-        };
-        await supabase.from("gastos").upsert(data, { onConflict: "descripcion,fecha" });
-      }
+      const expRows = expenses.map(exp => ({
+        fecha: exp.date,
+        descripcion: `[Zoho] ${exp.description || exp.vendor_name}`,
+        categoria: "Operativo",
+        monto: Number(exp.total),
+        proyecto: exp.customer_name || ""
+      })).filter(r => r.monto > 0);
+
+      // Delete previous Zoho-synced records and re-insert
+      await supabase.from("ingresos").delete().like("descripcion", "[Zoho]%");
+      await supabase.from("gastos").delete().like("descripcion", "[Zoho]%");
+
+      if (invRows.length > 0) await supabase.from("ingresos").insert(invRows);
+      if (expRows.length > 0) await supabase.from("gastos").insert(expRows);
 
       // Reload data
       const [i, g] = await Promise.all([
@@ -424,7 +424,7 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
       ]);
       setIngresos((i.data||[]).map(r=>({...r,desc:r.descripcion})));
       setGastos((g.data||[]).map(r=>({...r,desc:r.descripcion})));
-      setSyncMsg(`✅ Sincronizado: ${invoices.length} facturas, ${expenses.length} gastos`);
+      setSyncMsg(`✅ Sincronizado: ${invRows.length} facturas (₡${invRows.reduce((s,r)=>s+r.monto,0).toLocaleString()}), ${expRows.length} gastos`);
     } catch(e) {
       setSyncMsg("❌ Error al sincronizar: " + e.message);
     }
