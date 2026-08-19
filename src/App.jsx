@@ -1,5 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-import { LeadTracker, Taller } from "./modules.jsx";
+import { LeadTracker, Taller, RecursoHumano, Marketing } from "./modules.jsx";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -396,22 +396,22 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
       // Insert invoices — sync total amount from all invoices
       const invRows = invoices.map(inv => ({
         fecha: inv.date,
-        descripcion: `Zoho: ${inv.customer_name} - ${inv.invoice_number}`,
+        descripcion: `[Zoho] ${inv.customer_name} - ${inv.invoice_number} (${inv.status})`,
         monto: Number(inv.total),
         proyecto: inv.customer_name || ""
       })).filter(r => r.monto > 0);
 
       const expRows = expenses.map(exp => ({
         fecha: exp.date,
-        descripcion: `Zoho: ${exp.description || exp.vendor_name}`,
+        descripcion: `[Zoho] ${exp.description || exp.vendor_name}`,
         categoria: "Operativo",
         monto: Number(exp.total),
         proyecto: exp.customer_name || ""
       })).filter(r => r.monto > 0);
 
       // Delete previous Zoho-synced records and re-insert
-      await supabase.from("ingresos").delete().ilike("descripcion", "%Zoho%");
-await supabase.from("gastos").delete().ilike("descripcion", "%Zoho%");
+      await supabase.from("ingresos").delete().like("descripcion", "[Zoho]%");
+      await supabase.from("gastos").delete().like("descripcion", "[Zoho]%");
 
       if (invRows.length > 0) await supabase.from("ingresos").insert(invRows);
       if (expRows.length > 0) await supabase.from("gastos").insert(expRows);
@@ -885,6 +885,8 @@ RECORDATORIOS PENDIENTES:
 ${recordatorios.filter(r=>!r.hecho).map(r => `- ${r.texto} | ${r.fecha} | ${r.tipo}`).join("\n")}
 
 PROVEEDORES: ${proveedores.map(p=>p.nombre).join(", ")}
+GASTOS MARKETING: ₡${gastos.filter(g=>g.categoria==="Marketing").reduce((s,g)=>s+Number(g.monto),0).toLocaleString()}
+LEADS POR CANAL: ${["Instagram","WhatsApp","Referido","Facebook"].map(c=>`${c}: ${leads.filter(l=>l.fuente===c).length}`).join(", ")}
 ÓRDENES PENDIENTES: ${ocs.filter(o=>o.estado==="Pendiente").map(o=>`${o.proveedor}: ${o.items} (₡${o.monto})`).join(", ")||"ninguna"}
 
 META MENSUAL JUNIO: ₡2,500,000
@@ -1059,6 +1061,8 @@ export default function App() {
     { id:"recordatorios", label:"Recordatorios",icon:"◷", badge: pendientes },
     { id:"leads",         label:"Leads",         icon:"◎" },
     { id:"taller",        label:"Taller",        icon:"⚙" },
+    { id:"rrhh",          label:"Equipo",        icon:"👤" },
+    { id:"marketing",     label:"Marketing",     icon:"📣" },
     { id:"integraciones", label:"Integraciones",icon:"⊙" },
   ];
 
@@ -1109,6 +1113,8 @@ export default function App() {
           {tab === "recordatorios" && <Recordatorios recordatorios={recordatorios} setRecordatorios={setRecordatorios} />}
           {tab === "leads"         && <LeadTracker leads={leads} setLeads={setLeads} supabase={supabase} />}
           {tab === "taller"        && <Taller supabase={supabase} projects={projects} />}
+          {tab === "rrhh"          && <RecursoHumano supabase={supabase} />}
+          {tab === "marketing"     && <Marketing supabase={supabase} leads={leads} gastos={gastos} />}
           {tab === "integraciones" && <Integraciones />}
         </div>
       </div>
