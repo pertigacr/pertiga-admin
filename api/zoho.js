@@ -25,17 +25,17 @@ export default async function handler(req, res) {
       'Authorization': `Zoho-oauthtoken ${token}`,
       'Content-Type': 'application/json',
     };
-    const base = `https://books.zohoapis.com/api/v3`;
+    const base = `https://www.zohoapis.com/books/v3`;
     let result;
 
     if (action === 'get_invoices') {
-      const r = await fetch(`${base}/invoices?organization_id=${orgId}&status=all&per_page=50`, { headers });
+      const r = await fetch(`${base}/invoices?organization_id=${orgId}&status=all&per_page=100`, { headers });
       result = await r.json();
     } else if (action === 'get_expenses') {
-      const r = await fetch(`${base}/expenses?organization_id=${orgId}&per_page=50`, { headers });
+      const r = await fetch(`${base}/expenses?organization_id=${orgId}&per_page=100`, { headers });
       result = await r.json();
     } else if (action === 'get_contacts') {
-      const r = await fetch(`${base}/contacts?organization_id=${orgId}&per_page=50`, { headers });
+      const r = await fetch(`${base}/contacts?organization_id=${orgId}&per_page=100`, { headers });
       result = await r.json();
     } else if (action === 'create_invoice') {
       const r = await fetch(`${base}/invoices?organization_id=${orgId}`, {
