@@ -23,8 +23,8 @@ export default async function handler(req, res) {
     };
 
     const [invRes, expRes] = await Promise.all([
-      fetch(`https://books.zoho.com/api/v3/invoices?organization_id=${orgId}&per_page=5`, { headers }),
-      fetch(`https://books.zoho.com/api/v3/expenses?organization_id=${orgId}&per_page=5`, { headers }),
+      fetch(`https://books.zohoapis.com/api/v3/invoices?organization_id=${orgId}&per_page=5`, { headers }),
+      fetch(`https://books.zohoapis.com/api/v3/expenses?organization_id=${orgId}&per_page=5`, { headers }),
     ]);
 
     const invData = await invRes.json();
@@ -33,8 +33,14 @@ export default async function handler(req, res) {
     res.status(200).json({
       token_ok: !!token,
       org_id: orgId,
-      invoices_raw: invData,
-      expenses_raw: expData,
+      invoices_count: invData.invoices?.length || 0,
+      invoices_code: invData.code,
+      invoices_message: invData.message,
+      first_invoice: invData.invoices?.[0] || null,
+      expenses_count: expData.expenses?.length || 0,
+      expenses_code: expData.code,
+      expenses_message: expData.message,
+      first_expense: expData.expenses?.[0] || null,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
