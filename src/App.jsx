@@ -381,7 +381,7 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
         body: JSON.stringify({ action:"get_invoices" })
       });
       const invData = await invRes.json();
-      const invoices = invData.invoices || [];
+      const invoices = (invData.invoices || []).filter(i => ['paid','overdue','partially_paid','sent','draft'].includes(i.status));
       
       // Sync expenses as gastos
       const expRes = await fetch("/api/zoho", {
@@ -392,14 +392,17 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
       const expenses = expData.expenses || [];
 
       // Map and upsert invoices to ingresos
-      for (const inv of invoices.filter(i => i.status === "paid")) {
+      for (const inv of invoices) {
+        const cobrado = Number(inv.total) - Number(inv.balance);
         const data = {
           fecha: inv.date,
-          descripcion: inv.customer_name + " - " + (inv.reference_number || inv.invoice_number),
-          monto: Number(inv.total),
-          proyecto: inv.reference_number || ""
+          descripcion: `${inv.customer_name} - ${inv.invoice_number}`,
+          monto: cobrado > 0 ? cobrado : Number(inv.total),
+          proyecto: inv.customer_name || ""
         };
-        await supabase.from("ingresos").upsert(data, { onConflict: "descripcion,fecha" });
+        if (data.monto > 0) {
+          await supabase.from("ingresos").upsert(data, { onConflict: "descripcion,fecha" });
+        }
       }
 
       // Map and upsert expenses to gastos
