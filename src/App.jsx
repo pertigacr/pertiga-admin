@@ -396,22 +396,22 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
       // Insert invoices — sync total amount from all invoices
       const invRows = invoices.map(inv => ({
         fecha: inv.date,
-        descripcion: `[Zoho] ${inv.customer_name} - ${inv.invoice_number} (${inv.status})`,
+        descripcion: `Zoho: ${inv.customer_name} - ${inv.invoice_number}`,
         monto: Number(inv.total),
         proyecto: inv.customer_name || ""
       })).filter(r => r.monto > 0);
 
       const expRows = expenses.map(exp => ({
         fecha: exp.date,
-        descripcion: `[Zoho] ${exp.description || exp.vendor_name}`,
+        descripcion: `Zoho: ${exp.description || exp.vendor_name}`,
         categoria: "Operativo",
         monto: Number(exp.total),
         proyecto: exp.customer_name || ""
       })).filter(r => r.monto > 0);
 
       // Delete previous Zoho-synced records and re-insert
-      await supabase.from("ingresos").delete().like("descripcion", "[Zoho]%");
-      await supabase.from("gastos").delete().like("descripcion", "[Zoho]%");
+      await supabase.from("ingresos").delete().ilike("descripcion", "%Zoho%");
+await supabase.from("gastos").delete().ilike("descripcion", "%Zoho%");
 
       if (invRows.length > 0) await supabase.from("ingresos").insert(invRows);
       if (expRows.length > 0) await supabase.from("gastos").insert(expRows);
