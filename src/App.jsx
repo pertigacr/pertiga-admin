@@ -369,6 +369,65 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
   const [form, setForm] = useState({});
   const [tipo, setTipo] = useState("gasto"); // para modal
 
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
+
+  const syncZoho = async () => {
+    setSyncing(true); setSyncMsg("");
+    try {
+      // Sync invoices as ingresos
+      const invRes = await fetch("/api/zoho", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ action:"get_invoices" })
+      });
+      const invData = await invRes.json();
+      const invoices = invData.invoices || [];
+      
+      // Sync expenses as gastos
+      const expRes = await fetch("/api/zoho", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ action:"get_expenses" })
+      });
+      const expData = await expRes.json();
+      const expenses = expData.expenses || [];
+
+      // Map and upsert invoices to ingresos
+      for (const inv of invoices.filter(i => i.status === "paid")) {
+        const data = {
+          fecha: inv.date,
+          descripcion: inv.customer_name + " - " + (inv.reference_number || inv.invoice_number),
+          monto: Number(inv.total),
+          proyecto: inv.reference_number || ""
+        };
+        await supabase.from("ingresos").upsert(data, { onConflict: "descripcion,fecha" });
+      }
+
+      // Map and upsert expenses to gastos
+      for (const exp of expenses) {
+        const data = {
+          fecha: exp.date,
+          descripcion: exp.description || exp.vendor_name,
+          categoria: exp.account_name || "Operativo",
+          monto: Number(exp.total),
+          proyecto: exp.reference_number || ""
+        };
+        await supabase.from("gastos").upsert(data, { onConflict: "descripcion,fecha" });
+      }
+
+      // Reload data
+      const [i, g] = await Promise.all([
+        supabase.from("ingresos").select("*"),
+        supabase.from("gastos").select("*"),
+      ]);
+      setIngresos((i.data||[]).map(r=>({...r,desc:r.descripcion})));
+      setGastos((g.data||[]).map(r=>({...r,desc:r.descripcion})));
+      setSyncMsg(`✅ Sincronizado: ${invoices.length} facturas, ${expenses.length} gastos`);
+    } catch(e) {
+      setSyncMsg("❌ Error al sincronizar: " + e.message);
+    }
+    setSyncing(false);
+  };
+
   const totalI = ingresos.reduce((s,i) => s+Number(i.monto), 0);
   const totalG = gastos.reduce((s,g) => s+Number(g.monto), 0);
   const margen = totalI - totalG;
@@ -416,11 +475,13 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 16 }}>
         <div style={{ fontFamily:"'Georgia',serif", fontSize: 20, fontWeight: 700, color: C.tinta }}>Contabilidad</div>
         <div style={{ display:"flex", gap: 8 }}>
+          <Btn variant="ghost" style={{ fontSize:12, background:"#EAF4F0", color:"#3D5A52" }} onClick={syncZoho} disabled={syncing}>{syncing ? "Sincronizando..." : "⟳ Zoho"}</Btn>
           <Btn variant="ghost" style={{ fontSize:12 }} onClick={() => { setTipo("ingreso"); setForm({ fecha: today, desc:"", monto:"", proyecto:"" }); setModal("new"); }}>+ Ingreso</Btn>
           <Btn style={{ fontSize:12 }} onClick={() => { setTipo("gasto"); setForm({ fecha: today, desc:"", categoria:"Materiales", monto:"", proyecto:"" }); setModal("new"); }}>+ Gasto</Btn>
         </div>
       </div>
 
+      {syncMsg && <div style={{ background: syncMsg.includes("✅") ? "#EAFAF1" : "#FDECEA", border: `1px solid ${syncMsg.includes("✅") ? "#A9DFBF" : "#F1948A"}`, borderRadius:8, padding:"10px 16px", marginBottom:12, fontSize:13, color: syncMsg.includes("✅") ? "#27AE60" : "#C0392B", fontWeight:600 }}>{syncMsg}</div>}
       {/* KPIs */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
         {[
@@ -906,7 +967,7 @@ META MENSUAL JUNIO: ₡2,500,000
 function Integraciones() {
   const items = [
     { nombre:"Zoho CRM", desc:"Gestión de clientes y pipeline de ventas", estado:"Pendiente", pasos:["Ir a zoho.com → Developer Console","Crear OAuth app → copiar Client ID y Secret","En Pértiga Admin → pegar credenciales","Autorizar acceso a contactos y proyectos"], color:"#E74C3C", icon:"Z" },
-    { nombre:"Zoho Books", desc:"Facturación, gastos y contabilidad", estado:"Pendiente", pasos:["En Zoho Books → Configuración → API","Generar API key","Conectar en Pértiga Admin","Sincronizar facturas y gastos existentes"], color:"#E67E22", icon:"B" },
+    { nombre:"Zoho Books", desc:"Facturación, gastos y contabilidad", estado:"Conectado", pasos:["✅ Client ID y Secret configurados","✅ Autorización OAuth completada","✅ Refresh Token activo","Sincronizá datos desde el módulo de Contabilidad"], color:"#E67E22", icon:"B" },
     { nombre:"GTI (Hacienda CR)", desc:"Facturación electrónica Costa Rica", estado:"No iniciado", pasos:["Registrarte en portal.comprobanteselectronicos.go.cr","Obtener certificado digital","Configurar en sistema de facturación","Conectar via API de GTI"], color:"#2980B9", icon:"G" },
     { nombre:"WhatsApp Business API", desc:"Canal principal de comunicación y asistente", estado:"No iniciado", pasos:["Cuenta Meta Business verificada","Solicitar acceso a WhatsApp Business API","Usar servicio como Twilio o 360dialog","Conectar webhook con asistente Pértiga"], color:"#27AE60", icon:"W" },
     { nombre:"Gmail / Google Workspace", desc:"Lectura de correos y notificaciones", estado:"No iniciado", pasos:["Crear proyecto en console.cloud.google.com","Habilitar Gmail API","Configurar OAuth consent screen","Autorizar acceso de solo lectura"], color:"#C0392B", icon:"@" },
