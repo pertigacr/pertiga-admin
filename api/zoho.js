@@ -29,8 +29,15 @@ export default async function handler(req, res) {
     let result;
 
     if (action === 'get_invoices') {
-      const r = await fetch(`${base}/invoices?organization_id=${orgId}&status=all&per_page=100`, { headers });
-      result = await r.json();
+      // Fetch all invoice statuses separately to avoid filter errors
+      const statuses = ['sent', 'draft', 'overdue', 'paid', 'partially_paid'];
+      let allInvoices = [];
+      for (const status of statuses) {
+        const r = await fetch(`${base}/invoices?organization_id=${orgId}&filter_by=Status.${status}&per_page=100`, { headers });
+        const data = await r.json();
+        if (data.invoices) allInvoices = [...allInvoices, ...data.invoices];
+      }
+      result = { invoices: allInvoices };
     } else if (action === 'get_expenses') {
       const r = await fetch(`${base}/expenses?organization_id=${orgId}&per_page=100`, { headers });
       result = await r.json();
