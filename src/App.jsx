@@ -381,7 +381,9 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
         body: JSON.stringify({ action:"get_invoices" })
       });
       const invData = await invRes.json();
+      console.log("ZOHO INVOICES RAW:", invData);
       const invoices = (invData.invoices || []).filter(i => ['paid','overdue','partially_paid','sent','draft'].includes(i.status));
+      console.log("FILTERED INVOICES:", invoices.length);
       
       // Sync expenses as gastos
       const expRes = await fetch("/api/zoho", {
