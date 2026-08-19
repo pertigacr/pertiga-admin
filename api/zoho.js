@@ -25,7 +25,7 @@ export default async function handler(req, res) {
       'Authorization': `Zoho-oauthtoken ${token}`,
       'Content-Type': 'application/json',
     };
-    const base = `https://books.zoho.com/api/v3`;
+    const base = `https://books.zohoapis.com/api/v3`;
     let result;
 
     if (action === 'get_invoices') {
