@@ -391,16 +391,13 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
       const expData = await expRes.json();
       const expenses = expData.expenses || [];
 
-      // Insert invoices — tag them with zoho_ prefix to avoid duplicates
-      const invRows = invoices.map(inv => {
-        const cobrado = Number(inv.total) - Number(inv.balance);
-        return {
-          fecha: inv.date,
-          descripcion: `[Zoho] ${inv.customer_name} - ${inv.invoice_number}`,
-          monto: cobrado > 0 ? cobrado : Number(inv.total),
-          proyecto: inv.customer_name || ""
-        };
-      }).filter(r => r.monto > 0);
+      // Insert invoices — sync total amount from all invoices
+      const invRows = invoices.map(inv => ({
+        fecha: inv.date,
+        descripcion: `[Zoho] ${inv.customer_name} - ${inv.invoice_number} (${inv.status})`,
+        monto: Number(inv.total),
+        proyecto: inv.customer_name || ""
+      })).filter(r => r.monto > 0);
 
       const expRows = expenses.map(exp => ({
         fecha: exp.date,
