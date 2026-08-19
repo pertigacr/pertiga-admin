@@ -11,38 +11,32 @@ export default async function handler(req, res) {
       }),
     });
     const data = await response.json();
-    return data.access_token;
+    return { token: data.access_token, raw: data };
   }
 
   try {
-    const token = await getAccessToken();
+    const { token, raw } = await getAccessToken();
     const orgId = process.env.ZOHO_ORG_ID;
     const headers = {
       'Authorization': `Zoho-oauthtoken ${token}`,
       'Content-Type': 'application/json',
     };
 
-    const [invRes, expRes] = await Promise.all([
-      fetch(`https://books.zohoapis.com/api/v3/invoices?organization_id=${orgId}&per_page=5`, { headers }),
-      fetch(`https://books.zohoapis.com/api/v3/expenses?organization_id=${orgId}&per_page=5`, { headers }),
-    ]);
-
+    // Try new domain format
+    const invRes = await fetch(`https://www.zohoapis.com/books/v3/invoices?organization_id=${orgId}&per_page=3`, { headers });
     const invData = await invRes.json();
+
+    const expRes = await fetch(`https://www.zohoapis.com/books/v3/expenses?organization_id=${orgId}&per_page=3`, { headers });
     const expData = await expRes.json();
 
     res.status(200).json({
       token_ok: !!token,
+      token_raw: raw,
       org_id: orgId,
-      invoices_count: invData.invoices?.length || 0,
-      invoices_code: invData.code,
-      invoices_message: invData.message,
-      first_invoice: invData.invoices?.[0] || null,
-      expenses_count: expData.expenses?.length || 0,
-      expenses_code: expData.code,
-      expenses_message: expData.message,
-      first_expense: expData.expenses?.[0] || null,
+      invoices: invData,
+      expenses: expData,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message, stack: err.stack });
   }
 }
