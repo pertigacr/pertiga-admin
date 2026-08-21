@@ -94,7 +94,7 @@ function Modal({ title, onClose, children }) {
       <div style={{ background: "#161B22", borderRadius: 12, width: "100%", maxWidth: 520, maxHeight: "85vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.6)", border: "1px solid #30363D" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px 14px", borderBottom: `1px solid ${C.crema}` }}>
           <span style={{ fontFamily: "'Georgia', serif", fontSize: 17, fontWeight: 600, color: "#E8E8E8" }}>{title}</span>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: C.piedra }}>×</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "#8B949E" }}>×</button>
         </div>
         <div style={{ padding: "20px 24px 24px" }}>{children}</div>
       </div>
@@ -105,21 +105,21 @@ function Modal({ title, onClose, children }) {
 // ── INPUT ─────────────────────────────────────────────────────────────────────
 const Inp = ({ label, ...p }) => (
   <div style={{ marginBottom: 14 }}>
-    {label && <div style={{ fontSize: 11, fontWeight: 600, color: C.piedra, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>}
+    {label && <div style={{ fontSize: 11, fontWeight: 600, color: "#8B949E", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>}
     <input {...p} style={{ width: "100%", border: `1.5px solid #30363D`, borderRadius: 6, padding: "8px 10px", fontSize: 13, color: "#E8E8E8", background: "#21262D", outline: "none", boxSizing: "border-box", ...p.style }} />
   </div>
 );
 const Sel = ({ label, children, ...p }) => (
   <div style={{ marginBottom: 14 }}>
-    {label && <div style={{ fontSize: 11, fontWeight: 600, color: C.piedra, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>}
-    <select {...p} style={{ width: "100%", border: `1.5px solid #E2DDD6`, borderRadius: 6, padding: "8px 10px", fontSize: 13, color: C.tinta, background: C.blanco, outline: "none", boxSizing: "border-box" }}>
+    {label && <div style={{ fontSize: 11, fontWeight: 600, color: "#8B949E", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>}
+    <select {...p} style={{ width: "100%", border: `1.5px solid #E2DDD6`, borderRadius: 6, padding: "8px 10px", fontSize: 13, color: "#E8E8E8", background: "#161B22", outline: "none", boxSizing: "border-box" }}>
       {children}
     </select>
   </div>
 );
 const Txt = ({ label, ...p }) => (
   <div style={{ marginBottom: 14 }}>
-    {label && <div style={{ fontSize: 11, fontWeight: 600, color: C.piedra, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>}
+    {label && <div style={{ fontSize: 11, fontWeight: 600, color: "#8B949E", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>}
     <textarea {...p} style={{ width: "100%", border: `1.5px solid #30363D`, borderRadius: 6, padding: "8px 10px", fontSize: 13, color: "#E8E8E8", background: "#21262D", outline: "none", boxSizing: "border-box", resize: "vertical", minHeight: 70 }} />
   </div>
 );
@@ -375,7 +375,7 @@ function Proyectos({ projects, setProjects }) {
   return (
     <div>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 16 }}>
-        <div style={{ fontFamily:"'Georgia',serif", fontSize: 20, fontWeight: 700, color: C.tinta }}>Proyectos</div>
+        <div style={{ fontFamily:"'Georgia',serif", fontSize: 20, fontWeight: 700, color: "#E8E8E8" }}>Proyectos</div>
         <Btn onClick={() => { setForm(empty); setModal("new"); }}>+ Nuevo proyecto</Btn>
       </div>
 
@@ -389,27 +389,27 @@ function Proyectos({ projects, setProjects }) {
       </div>
 
       {/* Tabla */}
-      <div style={{ background: C.blanco, border:`1px solid #E8E2D8`, borderRadius: 10, overflow:"hidden" }}>
-        {filtrados.length === 0 && <div style={{ padding: 32, textAlign:"center", color: C.piedra, fontSize: 13 }}>No hay proyectos en este filtro</div>}
+      <div style={{ background: "#161B22", border:"1px solid #21262D", borderRadius: 10, overflow:"hidden" }}>
+        {filtrados.length === 0 && <div style={{ padding: 32, textAlign:"center", color: "#8B949E", fontSize: 13 }}>No hay proyectos en este filtro</div>}
         {filtrados.map((p, i) => (
           <div key={p.id} onClick={() => openEdit(p)} style={{ padding:"14px 18px", borderBottom: i < filtrados.length-1 ? `1px solid ${C.crema}` : "none", cursor:"pointer", display:"grid", gridTemplateColumns:"1fr auto", gap: 12, alignItems:"center" }}
-            onMouseEnter={e => e.currentTarget.style.background = C.crema}
+            onMouseEnter={e => e.currentTarget.style.background = "#21262D"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
           >
             <div>
               <div style={{ display:"flex", alignItems:"center", gap: 8, marginBottom: 4 }}>
-                <span style={{ fontWeight: 700, fontSize: 13, color: C.tinta }}>{p.nombre}</span>
+                <span style={{ fontWeight: 700, fontSize: 13, color: "#E8E8E8" }}>{p.nombre}</span>
                 <Badge label={p.estado} />
-                <span style={{ fontSize: 11, color: C.piedra }}>{p.tipo}</span>
+                <span style={{ fontSize: 11, color: "#8B949E" }}>{p.tipo}</span>
               </div>
-              <div style={{ fontSize: 12, color: C.piedra }}>
+              <div style={{ fontSize: 12, color: "#8B949E" }}>
                 {p.cliente} · Entrega: {fmtDate(p.entrega)}
                 {!["Entregado","Cancelado"].includes(p.estado) && (() => { const d = daysLeft(p.entrega); return <span style={{ color: d < 0 ? C.rojo : d <= 3 ? "#E67E22" : C.piedra }}> · {d < 0 ? `${Math.abs(d)}d retraso` : d === 0 ? "Hoy" : `${d}d`}</span>; })()}
               </div>
             </div>
             <div style={{ textAlign:"right" }}>
-              <div style={{ fontWeight: 700, color: C.tinta, fontSize: 14 }}>{fmt(p.monto)}</div>
-              <div style={{ fontSize: 11, color: C.piedra }}>
+              <div style={{ fontWeight: 700, color: "#E8E8E8", fontSize: 14 }}>{fmt(p.monto)}</div>
+              <div style={{ fontSize: 11, color: "#8B949E" }}>
                 Saldo: <span style={{ color: saldo(p) > 0 ? C.musgo : C.piedra }}>{fmt(saldo(p))}</span>
               </div>
               <div style={{ marginTop: 4, background: "#E8E2D8", borderRadius: 3, height: 4, width: 80 }}>
@@ -427,9 +427,9 @@ function Proyectos({ projects, setProjects }) {
           { l: "Cobrado", v: fmt(filtrados.reduce((s,p) => s+Number(p.adelanto),0)) },
           { l: "Por cobrar", v: fmt(filtrados.filter(p => !["Entregado","Cancelado"].includes(p.estado)).reduce((s,p) => s+(Number(p.monto)-Number(p.adelanto)),0)) },
         ].map(k => (
-          <div key={k.l} style={{ background: C.blanco, border:`1px solid #E8E2D8`, borderRadius: 8, padding:"10px 14px", flex:1 }}>
-            <div style={{ fontSize:10, color: C.piedra, textTransform:"uppercase", letterSpacing:0.4, fontWeight:600 }}>{k.l}</div>
-            <div style={{ fontFamily:"'Georgia',serif", fontSize:18, fontWeight:700, color:C.tinta, marginTop:2 }}>{k.v}</div>
+          <div key={k.l} style={{ background: "#161B22", border:"1px solid #21262D", borderRadius: 8, padding:"10px 14px", flex:1 }}>
+            <div style={{ fontSize:10, color: "#8B949E", textTransform:"uppercase", letterSpacing:0.4, fontWeight:600 }}>{k.l}</div>
+            <div style={{ fontFamily:"'Georgia',serif", fontSize:18, fontWeight:700, color:"#E8E8E8", marginTop:2 }}>{k.v}</div>
           </div>
         ))}
       </div>
@@ -579,7 +579,7 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
   return (
     <div>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 16 }}>
-        <div style={{ fontFamily:"'Georgia',serif", fontSize: 20, fontWeight: 700, color: C.tinta }}>Contabilidad</div>
+        <div style={{ fontFamily:"'Georgia',serif", fontSize: 20, fontWeight: 700, color: "#E8E8E8" }}>Contabilidad</div>
         <div style={{ display:"flex", gap: 8 }}>
           <Btn variant="ghost" style={{ fontSize:12, background:"#EAF4F0", color:"#3D5A52" }} onClick={syncZoho} disabled={syncing}>{syncing ? "Sincronizando..." : "⟳ Zoho"}</Btn>
           <Btn variant="ghost" style={{ fontSize:12 }} onClick={() => { setTipo("ingreso"); setForm({ fecha: today, desc:"", monto:"", proyecto:"" }); setModal("new"); }}>+ Ingreso</Btn>
@@ -595,27 +595,27 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
           { l:"Gastos", v: fmt(totalG), c: C.rojo },
           { l:`Margen ${pctMargen}%`, v: fmt(margen), c: margen >= 0 ? C.dorado : C.rojo },
         ].map(k => (
-          <div key={k.l} style={{ background: C.blanco, border:`1px solid #E8E2D8`, borderRadius:10, padding:"14px 16px" }}>
-            <div style={{ fontSize:10, color: C.piedra, textTransform:"uppercase", letterSpacing:0.4, fontWeight:600, marginBottom:4 }}>{k.l}</div>
+          <div key={k.l} style={{ background: "#161B22", border:"1px solid #21262D", borderRadius:10, padding:"14px 16px" }}>
+            <div style={{ fontSize:10, color: "#8B949E", textTransform:"uppercase", letterSpacing:0.4, fontWeight:600, marginBottom:4 }}>{k.l}</div>
             <div style={{ fontFamily:"'Georgia',serif", fontSize:22, fontWeight:700, color:k.c }}>{k.v}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ display:"flex", gap: 8, marginBottom: 14, background:"#F0EAE0", borderRadius:8, padding:4 }}>
+      <div style={{ display:"flex", gap: 8, marginBottom: 14, background:"#21262D", borderRadius:8, padding:4 }}>
         <TabBtn id="resumen" label="Resumen" />
         <TabBtn id="ingresos" label={`Ingresos (${ingresos.length})`} />
         <TabBtn id="gastos" label={`Gastos (${gastos.length})`} />
       </div>
 
       {tab === "resumen" && (
-        <div style={{ background: C.blanco, border:`1px solid #E8E2D8`, borderRadius:10, padding:18 }}>
-          <div style={{ fontWeight:700, fontSize:13, color:C.tinta, marginBottom:14 }}>Gastos por categoría</div>
+        <div style={{ background: "#161B22", border:"1px solid #21262D", borderRadius:10, padding:18 }}>
+          <div style={{ fontWeight:700, fontSize:13, color:"#E8E8E8", marginBottom:14 }}>Gastos por categoría</div>
           {porCat.map(c => (
             <div key={c.cat} style={{ marginBottom:10 }}>
               <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
-                <span style={{ fontSize:12, color:C.tinta, fontWeight:600 }}>{c.cat}</span>
-                <span style={{ fontSize:12, color:C.piedra }}>{fmt(c.total)}</span>
+                <span style={{ fontSize:12, color:"#E8E8E8", fontWeight:600 }}>{c.cat}</span>
+                <span style={{ fontSize:12, color:"#8B949E" }}>{fmt(c.total)}</span>
               </div>
               <div style={{ background:"#E8E2D8", borderRadius:3, height:6 }}>
                 <div style={{ background: C.dorado, width:`${Math.round(c.total/maxCat*100)}%`, height:"100%", borderRadius:3 }} />
@@ -623,14 +623,14 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
             </div>
           ))}
           <div style={{ marginTop:18, paddingTop:14, borderTop:`1px solid ${C.crema}` }}>
-            <div style={{ fontWeight:700, fontSize:13, color:C.tinta, marginBottom:10 }}>Meta mensual ({new Date().toLocaleDateString("es-CR",{month:"long",year:"numeric"})})</div>
-            <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, color:C.piedra, marginBottom:4 }}>
+            <div style={{ fontWeight:700, fontSize:13, color:"#E8E8E8", marginBottom:10 }}>Meta mensual ({new Date().toLocaleDateString("es-CR",{month:"long",year:"numeric"})})</div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, color:"#8B949E", marginBottom:4 }}>
               <span>{fmt(2500000)} meta</span><span>{fmt(totalI)} facturado</span>
             </div>
             <div style={{ background:"#E8E2D8", borderRadius:4, height:10 }}>
               <div style={{ background: C.musgo, width:`${Math.min(100,Math.round(totalI/2500000*100))}%`, height:"100%", borderRadius:4 }} />
             </div>
-            <div style={{ fontSize:11, color:C.piedra, marginTop:4 }}>
+            <div style={{ fontSize:11, color:"#8B949E", marginTop:4 }}>
               Faltan {fmt(Math.max(0, 2500000-totalI))} para la meta
             </div>
           </div>
@@ -638,16 +638,16 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
       )}
 
       {tab === "ingresos" && (
-        <div style={{ background: C.blanco, border:`1px solid #E8E2D8`, borderRadius:10, overflow:"hidden" }}>
+        <div style={{ background: "#161B22", border:"1px solid #21262D", borderRadius:10, overflow:"hidden" }}>
           {ingresos.sort((a,b) => new Date(b.fecha)-new Date(a.fecha)).map((ing, i) => (
             <div key={ing.id} onClick={() => { setTipo("ingreso"); setForm({...ing}); setModal("edit"); }}
               style={{ padding:"12px 18px", borderBottom: i<ingresos.length-1 ? `1px solid ${C.crema}` : "none", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center" }}
-              onMouseEnter={e => e.currentTarget.style.background=C.crema}
+              onMouseEnter={e => e.currentTarget.style.background="#21262D"}
               onMouseLeave={e => e.currentTarget.style.background="transparent"}
             >
               <div>
-                <div style={{ fontSize:13, fontWeight:600, color:C.tinta }}>{ing.desc}</div>
-                <div style={{ fontSize:11, color:C.piedra }}>{fmtDate(ing.fecha)}{ing.proyecto && ` · ${ing.proyecto}`}</div>
+                <div style={{ fontSize:13, fontWeight:600, color:"#E8E8E8" }}>{ing.desc}</div>
+                <div style={{ fontSize:11, color:"#8B949E" }}>{fmtDate(ing.fecha)}{ing.proyecto && ` · ${ing.proyecto}`}</div>
               </div>
               <div style={{ fontWeight:700, color:C.musgo, fontSize:15 }}>+{fmt(ing.monto)}</div>
             </div>
@@ -656,19 +656,19 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
       )}
 
       {tab === "gastos" && (
-        <div style={{ background: C.blanco, border:`1px solid #E8E2D8`, borderRadius:10, overflow:"hidden" }}>
+        <div style={{ background: "#161B22", border:"1px solid #21262D", borderRadius:10, overflow:"hidden" }}>
           {gastos.sort((a,b) => new Date(b.fecha)-new Date(a.fecha)).map((g, i) => (
             <div key={g.id} onClick={() => { setTipo("gasto"); setForm({...g}); setModal("edit"); }}
               style={{ padding:"12px 18px", borderBottom: i<gastos.length-1 ? `1px solid ${C.crema}` : "none", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center" }}
-              onMouseEnter={e => e.currentTarget.style.background=C.crema}
+              onMouseEnter={e => e.currentTarget.style.background="#21262D"}
               onMouseLeave={e => e.currentTarget.style.background="transparent"}
             >
               <div>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ fontSize:13, fontWeight:600, color:C.tinta }}>{g.desc}</span>
-                  <span style={{ background:"#F0EAE0", color:C.piedra, borderRadius:4, padding:"1px 7px", fontSize:10, fontWeight:600 }}>{g.categoria}</span>
+                  <span style={{ fontSize:13, fontWeight:600, color:"#E8E8E8" }}>{g.desc}</span>
+                  <span style={{ background:"#21262D", color:"#8B949E", borderRadius:4, padding:"1px 7px", fontSize:10, fontWeight:600 }}>{g.categoria}</span>
                 </div>
-                <div style={{ fontSize:11, color:C.piedra }}>{fmtDate(g.fecha)}{g.proyecto && ` · ${g.proyecto}`}</div>
+                <div style={{ fontSize:11, color:"#8B949E" }}>{fmtDate(g.fecha)}{g.proyecto && ` · ${g.proyecto}`}</div>
               </div>
               <div style={{ fontWeight:700, color:C.rojo, fontSize:15 }}>-{fmt(g.monto)}</div>
             </div>
@@ -756,14 +756,14 @@ function Proveedores({ proveedores, setProveedores, ocs, setOcs }) {
   return (
     <div>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-        <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:C.tinta }}>Proveedores</div>
+        <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:"#E8E8E8" }}>Proveedores</div>
         <div style={{ display:"flex", gap:8 }}>
           {tab==="proveedores" && <Btn onClick={() => { setTipo("proveedor"); setForm(emptyProv); setModal("new"); }}>+ Proveedor</Btn>}
           {tab==="oc" && <Btn onClick={() => { setTipo("oc"); setForm(emptyOC); setModal("new"); }}>+ Orden de compra</Btn>}
         </div>
       </div>
 
-      <div style={{ display:"flex", gap:8, marginBottom:14, background:"#F0EAE0", borderRadius:8, padding:4 }}>
+      <div style={{ display:"flex", gap:8, marginBottom:14, background:"#21262D", borderRadius:8, padding:4 }}>
         <TabBtn id="proveedores" label={`Proveedores (${proveedores.length})`} />
         <TabBtn id="oc" label={`Órdenes de compra (${ocs.length})`} />
       </div>
@@ -772,45 +772,45 @@ function Proveedores({ proveedores, setProveedores, ocs, setOcs }) {
         <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
           {proveedores.map(p => (
             <div key={p.id} onClick={() => { setTipo("proveedor"); setForm({...p}); setModal("edit"); }}
-              style={{ background:C.blanco, border:`1px solid #E8E2D8`, borderRadius:10, padding:"14px 18px", cursor:"pointer" }}
+              style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:"14px 18px", cursor:"pointer" }}
               onMouseEnter={e => e.currentTarget.style.borderColor=C.dorado}
               onMouseLeave={e => e.currentTarget.style.borderColor="#E8E2D8"}
             >
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                 <div>
-                  <div style={{ fontWeight:700, fontSize:14, color:C.tinta }}>{p.nombre}</div>
-                  <div style={{ fontSize:12, color:C.piedra, marginTop:2 }}>{p.contacto} · {p.tel}</div>
-                  <div style={{ fontSize:11, color:C.piedra, marginTop:2 }}>{p.materiales}</div>
+                  <div style={{ fontWeight:700, fontSize:14, color:"#E8E8E8" }}>{p.nombre}</div>
+                  <div style={{ fontSize:12, color:"#8B949E", marginTop:2 }}>{p.contacto} · {p.tel}</div>
+                  <div style={{ fontSize:11, color:"#8B949E", marginTop:2 }}>{p.materiales}</div>
                 </div>
                 <div style={{ textAlign:"right" }}>
-                  <div style={{ fontSize:11, background:"#F0EAE0", color:C.piedra, padding:"3px 8px", borderRadius:4, fontWeight:600 }}>{p.condicion}</div>
+                  <div style={{ fontSize:11, background:"#21262D", color:"#8B949E", padding:"3px 8px", borderRadius:4, fontWeight:600 }}>{p.condicion}</div>
                   {p.email && <div style={{ fontSize:11, color:C.azul, marginTop:4 }}>{p.email}</div>}
                 </div>
               </div>
-              {p.notas && <div style={{ fontSize:11, color:C.piedra, marginTop:8, fontStyle:"italic" }}>{p.notas}</div>}
+              {p.notas && <div style={{ fontSize:11, color:"#8B949E", marginTop:8, fontStyle:"italic" }}>{p.notas}</div>}
             </div>
           ))}
         </div>
       )}
 
       {tab === "oc" && (
-        <div style={{ background:C.blanco, border:`1px solid #E8E2D8`, borderRadius:10, overflow:"hidden" }}>
+        <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, overflow:"hidden" }}>
           {ocs.sort((a,b) => new Date(b.fecha)-new Date(a.fecha)).map((oc, i) => (
             <div key={oc.id} onClick={() => { setTipo("oc"); setForm({...oc}); setModal("edit"); }}
               style={{ padding:"13px 18px", borderBottom:i<ocs.length-1?`1px solid ${C.crema}`:"none", cursor:"pointer", display:"grid", gridTemplateColumns:"1fr auto", gap:12, alignItems:"center" }}
-              onMouseEnter={e => e.currentTarget.style.background=C.crema}
+              onMouseEnter={e => e.currentTarget.style.background="#21262D"}
               onMouseLeave={e => e.currentTarget.style.background="transparent"}
             >
               <div>
                 <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
-                  <span style={{ fontWeight:700, fontSize:13, color:C.tinta }}>OC #{oc.id}</span>
+                  <span style={{ fontWeight:700, fontSize:13, color:"#E8E8E8" }}>OC #{oc.id}</span>
                   <Badge label={oc.estado} />
                 </div>
-                <div style={{ fontSize:12, color:C.piedra }}>{oc.proveedor} · {fmtDate(oc.fecha)}</div>
-                <div style={{ fontSize:12, color:C.tinta, marginTop:2 }}>{oc.items}</div>
-                {oc.proyecto && <div style={{ fontSize:11, color:C.piedra }}>Proyecto: {oc.proyecto}</div>}
+                <div style={{ fontSize:12, color:"#8B949E" }}>{oc.proveedor} · {fmtDate(oc.fecha)}</div>
+                <div style={{ fontSize:12, color:"#E8E8E8", marginTop:2 }}>{oc.items}</div>
+                {oc.proyecto && <div style={{ fontSize:11, color:"#8B949E" }}>Proyecto: {oc.proyecto}</div>}
               </div>
-              <div style={{ fontWeight:700, color:C.tinta, fontSize:15 }}>{fmt(oc.monto)}</div>
+              <div style={{ fontWeight:700, color:"#E8E8E8", fontSize:15 }}>{fmt(oc.monto)}</div>
             </div>
           ))}
         </div>
@@ -905,7 +905,7 @@ function Recordatorios({ recordatorios, setRecordatorios }) {
   return (
     <div>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-        <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:C.tinta }}>Recordatorios</div>
+        <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:"#E8E8E8" }}>Recordatorios</div>
         <Btn onClick={() => { setForm(empty); setModal("new"); }}>+ Nuevo</Btn>
       </div>
 
@@ -918,25 +918,25 @@ function Recordatorios({ recordatorios, setRecordatorios }) {
       </div>
 
       <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-        {lista.length===0 && <div style={{ textAlign:"center", color:C.piedra, fontSize:13, padding:32 }}>Sin recordatorios en esta categoría</div>}
+        {lista.length===0 && <div style={{ textAlign:"center", color:"#8B949E", fontSize:13, padding:32 }}>Sin recordatorios en esta categoría</div>}
         {lista.map(r => {
           const d = daysLeft(r.fecha);
           return (
-            <div key={r.id} style={{ background:C.blanco, border:`1px solid #E8E2D8`, borderRadius:10, padding:"12px 16px", display:"flex", alignItems:"center", gap:12, borderLeft:`4px solid ${urgencyColor(r)}` }}>
+            <div key={r.id} style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:"12px 16px", display:"flex", alignItems:"center", gap:12, borderLeft:`4px solid ${urgencyColor(r)}` }}>
               <button onClick={() => toggle(r.id)} style={{ width:22, height:22, borderRadius:5, border:`2px solid ${urgencyColor(r)}`, background:r.hecho?urgencyColor(r):"transparent", cursor:"pointer", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                 {r.hecho && <span style={{ color:"white", fontSize:12 }}>✓</span>}
               </button>
               <div style={{ flex:1 }}>
                 <div style={{ fontWeight:600, fontSize:13, color:r.hecho?C.piedra:C.tinta, textDecoration:r.hecho?"line-through":"none" }}>{r.texto}</div>
-                <div style={{ fontSize:11, color:C.piedra, marginTop:2, display:"flex", gap:10 }}>
+                <div style={{ fontSize:11, color:"#8B949E", marginTop:2, display:"flex", gap:10 }}>
                   <span>{fmtDate(r.fecha)}</span>
-                  <span style={{ background:"#F0EAE0", padding:"1px 6px", borderRadius:3, fontWeight:600 }}>{r.tipo}</span>
+                  <span style={{ background:"#21262D", padding:"1px 6px", borderRadius:3, fontWeight:600 }}>{r.tipo}</span>
                   {!r.hecho && r.fecha && <span style={{ color:urgencyColor(r), fontWeight:600 }}>
                     {d<0 ? `${Math.abs(d)}d vencido` : d===0 ? "Hoy" : `En ${d}d`}
                   </span>}
                 </div>
               </div>
-              <button onClick={() => { setForm({...r}); setModal("edit"); }} style={{ background:"none", border:"none", cursor:"pointer", color:C.piedra, fontSize:14 }}>✏</button>
+              <button onClick={() => { setForm({...r}); setModal("edit"); }} style={{ background:"none", border:"none", cursor:"pointer", color:"#8B949E", fontSize:14 }}>✏</button>
             </div>
           );
         })}
@@ -1041,7 +1041,7 @@ SUGERENCIAS DE PREGUNTAS: estado del negocio, proyectos por vencer, leads pendie
 
   return (
     <div style={{ display:"flex", flexDirection:"column", height:520 }}>
-      <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:C.tinta, marginBottom:14 }}>Asistente Pértiga</div>
+      <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:"#E8E8E8", marginBottom:14 }}>Asistente Pértiga</div>
       
       <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column", gap:10, paddingRight:4, marginBottom:12 }}>
         {msgs.map((m, i) => (
@@ -1053,7 +1053,7 @@ SUGERENCIAS DE PREGUNTAS: estado del negocio, proyectos por vencer, leads pendie
         ))}
         {loading && (
           <div style={{ display:"flex" }}>
-            <div style={{ background:C.blanco, border:`1px solid #E8E2D8`, borderRadius:14, padding:"10px 16px", fontSize:13, color:C.piedra }}>
+            <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:14, padding:"10px 16px", fontSize:13, color:"#8B949E" }}>
               <span style={{ animation:"pulse 1.5s infinite" }}>Analizando...</span>
             </div>
           </div>
@@ -1065,7 +1065,7 @@ SUGERENCIAS DE PREGUNTAS: estado del negocio, proyectos por vencer, leads pendie
       {msgs.length <= 2 && (
         <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:10 }}>
           {SUGERENCIAS.map(s => (
-            <button key={s} onClick={() => { setInput(s); }} style={{ background:"#F0EAE0", border:"none", borderRadius:20, padding:"5px 12px", fontSize:11, color:C.tinta, cursor:"pointer", fontWeight:500 }}>{s}</button>
+            <button key={s} onClick={() => { setInput(s); }} style={{ background:"#21262D", border:"none", borderRadius:20, padding:"5px 12px", fontSize:11, color:"#E8E8E8", cursor:"pointer", fontWeight:500 }}>{s}</button>
           ))}
         </div>
       )}
@@ -1073,7 +1073,7 @@ SUGERENCIAS DE PREGUNTAS: estado del negocio, proyectos por vencer, leads pendie
       <div style={{ display:"flex", gap:8 }}>
         <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key==="Enter" && send()}
           placeholder="Preguntá sobre proyectos, contabilidad, proveedores..."
-          style={{ flex:1, border:`1.5px solid #D0C9C0`, borderRadius:8, padding:"10px 14px", fontSize:13, color:C.tinta, background:C.blanco, outline:"none" }}
+          style={{ flex:1, border:"1.5px solid #30363D", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#E8E8E8", background:"#161B22", outline:"none" }}
         />
         <Btn onClick={send} style={{ padding:"10px 20px" }} disabled={loading}>→</Btn>
       </div>
@@ -1097,26 +1097,26 @@ function Integraciones() {
 
   return (
     <div>
-      <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:C.tinta, marginBottom:6 }}>Integraciones</div>
-      <div style={{ color:C.piedra, fontSize:13, marginBottom:18 }}>Conectá Pértiga con tus otras herramientas. Seguí los pasos de cada integración.</div>
+      <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:"#E8E8E8", marginBottom:6 }}>Integraciones</div>
+      <div style={{ color:"#8B949E", fontSize:13, marginBottom:18 }}>Conectá Pértiga con tus otras herramientas. Seguí los pasos de cada integración.</div>
       
       <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
         {items.map(it => (
-          <div key={it.nombre} style={{ background:C.blanco, border:`1px solid #E8E2D8`, borderRadius:10, padding:"16px 18px" }}>
+          <div key={it.nombre} style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:"16px 18px" }}>
             <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:10 }}>
               <div style={{ width:38, height:38, borderRadius:9, background:it.color, display:"flex", alignItems:"center", justifyContent:"center", color:"white", fontWeight:800, fontSize:13, flexShrink:0 }}>{it.icon}</div>
               <div style={{ flex:1 }}>
-                <div style={{ fontWeight:700, fontSize:14, color:C.tinta }}>{it.nombre}</div>
-                <div style={{ fontSize:12, color:C.piedra }}>{it.desc}</div>
+                <div style={{ fontWeight:700, fontSize:14, color:"#E8E8E8" }}>{it.nombre}</div>
+                <div style={{ fontSize:12, color:"#8B949E" }}>{it.desc}</div>
               </div>
               <span style={{ background:colors[it.estado], color:textColors[it.estado], borderRadius:4, padding:"3px 10px", fontSize:11, fontWeight:600 }}>{it.estado}</span>
             </div>
             <div style={{ borderTop:`1px solid ${C.crema}`, paddingTop:10 }}>
-              <div style={{ fontSize:11, fontWeight:600, color:C.piedra, marginBottom:6, textTransform:"uppercase", letterSpacing:0.4 }}>Pasos para conectar</div>
+              <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:6, textTransform:"uppercase", letterSpacing:0.4 }}>Pasos para conectar</div>
               {it.pasos.map((paso, i) => (
                 <div key={i} style={{ display:"flex", gap:8, marginBottom:4, alignItems:"flex-start" }}>
-                  <span style={{ width:18, height:18, borderRadius:"50%", background:"#F0EAE0", color:C.piedra, fontSize:10, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{i+1}</span>
-                  <span style={{ fontSize:12, color:C.tinta }}>{paso}</span>
+                  <span style={{ width:18, height:18, borderRadius:"50%", background:"#21262D", color:"#8B949E", fontSize:10, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{i+1}</span>
+                  <span style={{ fontSize:12, color:"#E8E8E8" }}>{paso}</span>
                 </div>
               ))}
             </div>
