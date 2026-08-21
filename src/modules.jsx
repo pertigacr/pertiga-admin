@@ -255,7 +255,7 @@ export function LeadTracker({ leads, setLeads, supabase }) {
 // ═══════════════════════════════════════════════════════
 // TALLER
 // ═══════════════════════════════════════════════════════
-const OPERARIOS = ["Javier","Operario 1","Ayudante","Laqueador"];
+const OPERARIOS = ["Javier","Bernal","Gabriel","Elías"];
 const ETAPAS_PROD = ["En cola","En proceso","Control de calidad","Listo"];
 const TIPO_MANT = ["Maquinaria","Camión","Herramienta","Instalación","Otro"];
 const MAQUINAS = ["Router CNC","Lijadora calibradora","Sierra de mesa","Sierra circular","Compresor","Pistola de laca","Taladro","Fresadora","Otro"];
@@ -900,7 +900,7 @@ export function RecursoHumano({ supabase }) {
                 <div style={{marginBottom:14}}>
                   <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Rol</div>
                   <select value={form.rol||"Operario"} onChange={e=>setForm({...form,rol:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
-                    {["Operario","Ayudante","Laqueador","Instalador","Administrativo"].map(r=><option key={r}>{r}</option>)}
+                    {["Operario","Ayudante","Laqueador","Instalador","Administrativo","Fundador"].map(r=><option key={r}>{r}</option>)}
                   </select>
                 </div>
                 <div style={{marginBottom:14}}>
@@ -1304,6 +1304,352 @@ export function Marketing({ supabase, leads, gastos }) {
                 {form.id && <button onClick={async()=>{if(confirm("¿Eliminar?")){await supabase.from("campanas_marketing").delete().eq("id",form.id);setCampanas(campanas.filter(c=>c.id!==form.id));setModal(null);}}} style={{background:"#FDECEA",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
                 <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#1A1714",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
                 <button onClick={saveCampana} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// MODO TALLER — Tablet timer simplificado
+// ═══════════════════════════════════════════════════════
+const PROCESOS = ["Corte CNC","Ensamble","Lijado","Laca","Instalación","Diseño","Medición","Otro"];
+const OPERARIOS_TALLER = ["Javier","Bernal","Gabriel","Elías"];
+
+export function ModoTaller({ supabase, projects }) {
+  const [step, setStep] = useState("operario"); // operario → proceso → proyecto → timer
+  const [operario, setOperario] = useState("");
+  const [proceso, setProceso] = useState("");
+  const [proyecto, setProyecto] = useState("");
+  const [timerSeg, setTimerSeg] = useState(0);
+  const [timerActivo, setTimerActivo] = useState(false);
+  const [intervalId, setIntervalId] = useState(null);
+  const [guardado, setGuardado] = useState(false);
+
+  const today = new Date().toISOString().split("T")[0];
+  const fmtTimer = s => `${String(Math.floor(s/3600)).padStart(2,"0")}:${String(Math.floor((s%3600)/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+  const proyectosActivos = projects.filter(p => !["Entregado","Cancelado"].includes(p.estado));
+
+  const iniciar = () => {
+    setTimerActivo(true);
+    setGuardado(false);
+    const id = setInterval(() => setTimerSeg(s => s+1), 1000);
+    setIntervalId(id);
+  };
+
+  const detener = async () => {
+    clearInterval(intervalId);
+    setTimerActivo(false);
+    const mins = Math.round(timerSeg/60);
+    await supabase.from("tiempos").insert({
+      operario, descripcion: proceso, proyecto, minutos: mins, fecha: today
+    });
+    setGuardado(true);
+    setTimerSeg(0);
+  };
+
+  const reset = () => {
+    setStep("operario");
+    setOperario(""); setProceso(""); setProyecto("");
+    setTimerSeg(0); setGuardado(false);
+  };
+
+  const BtnGrande = ({ label, onClick, color, icon }) => (
+    <button onClick={onClick} style={{
+      background: color||"#161B22", border:"2px solid #30363D", borderRadius:14,
+      padding:"24px 16px", fontSize:16, fontWeight:700, color:"#E8E8E8",
+      cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center",
+      gap:8, transition:"all 0.15s", width:"100%"
+    }}
+      onMouseEnter={e=>{ e.currentTarget.style.borderColor="#C8A96E"; e.currentTarget.style.background="#21262D"; }}
+      onMouseLeave={e=>{ e.currentTarget.style.borderColor="#30363D"; e.currentTarget.style.background=color||"#161B22"; }}
+    >
+      {icon && <span style={{ fontSize:28 }}>{icon}</span>}
+      {label}
+    </button>
+  );
+
+  return (
+    <div style={{ maxWidth:600, margin:"0 auto" }}>
+      <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:"#E8E8E8", marginBottom:6 }}>⏱ Modo Taller</div>
+      <div style={{ color:"#8B949E", fontSize:13, marginBottom:24 }}>Tablet dedicado para registrar tiempos</div>
+
+      {/* Progress */}
+      <div style={{ display:"flex", gap:8, marginBottom:24 }}>
+        {["operario","proceso","proyecto","timer"].map((s,i) => (
+          <div key={s} style={{ flex:1, height:4, borderRadius:2, background: ["operario","proceso","proyecto","timer"].indexOf(step) >= i ? "#C8A96E" : "#21262D" }} />
+        ))}
+      </div>
+
+      {/* Step 1 — Operario */}
+      {step==="operario" && (
+        <div>
+          <div style={{ fontSize:18, fontWeight:700, color:"#E8E8E8", marginBottom:20, textAlign:"center" }}>¿Quién sos?</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            {OPERARIOS_TALLER.map(op => (
+              <BtnGrande key={op} label={op} icon="👤" onClick={()=>{ setOperario(op); setStep("proceso"); }} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Step 2 — Proceso */}
+      {step==="proceso" && (
+        <div>
+          <div style={{ fontSize:18, fontWeight:700, color:"#E8E8E8", marginBottom:4, textAlign:"center" }}>¿Qué tarea?</div>
+          <div style={{ color:"#8B949E", fontSize:13, textAlign:"center", marginBottom:20 }}>{operario}</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            {PROCESOS.map(p => (
+              <BtnGrande key={p} label={p} onClick={()=>{ setProceso(p); setStep("proyecto"); }} />
+            ))}
+          </div>
+          <button onClick={()=>setStep("operario")} style={{ marginTop:16, background:"transparent", border:"1px solid #30363D", borderRadius:8, padding:"10px 20px", color:"#8B949E", cursor:"pointer", width:"100%" }}>← Volver</button>
+        </div>
+      )}
+
+      {/* Step 3 — Proyecto */}
+      {step==="proyecto" && (
+        <div>
+          <div style={{ fontSize:18, fontWeight:700, color:"#E8E8E8", marginBottom:4, textAlign:"center" }}>¿Para qué proyecto?</div>
+          <div style={{ color:"#8B949E", fontSize:13, textAlign:"center", marginBottom:20 }}>{operario} · {proceso}</div>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {proyectosActivos.map(p => (
+              <button key={p.id} onClick={()=>{ setProyecto(p.nombre); setStep("timer"); }}
+                style={{ background:"#161B22", border:"2px solid #30363D", borderRadius:12, padding:"16px 20px", fontSize:14, fontWeight:600, color:"#E8E8E8", cursor:"pointer", textAlign:"left" }}
+                onMouseEnter={e=>{ e.currentTarget.style.borderColor="#C8A96E"; }}
+                onMouseLeave={e=>{ e.currentTarget.style.borderColor="#30363D"; }}>
+                {p.nombre} <span style={{ color:"#8B949E", fontWeight:400, fontSize:12 }}>· {p.cliente}</span>
+              </button>
+            ))}
+            <button onClick={()=>{ setProyecto("General"); setStep("timer"); }}
+              style={{ background:"#21262D", border:"2px dashed #30363D", borderRadius:12, padding:"14px 20px", fontSize:14, color:"#8B949E", cursor:"pointer" }}>
+              Sin proyecto específico
+            </button>
+          </div>
+          <button onClick={()=>setStep("proceso")} style={{ marginTop:16, background:"transparent", border:"1px solid #30363D", borderRadius:8, padding:"10px 20px", color:"#8B949E", cursor:"pointer", width:"100%" }}>← Volver</button>
+        </div>
+      )}
+
+      {/* Step 4 — Timer */}
+      {step==="timer" && (
+        <div style={{ textAlign:"center" }}>
+          <div style={{ color:"#8B949E", fontSize:13, marginBottom:8 }}>{operario} · {proceso}</div>
+          <div style={{ color:"#C8A96E", fontSize:12, marginBottom:24 }}>{proyecto}</div>
+
+          <div style={{ fontFamily:"'Georgia',serif", fontSize:72, fontWeight:700, color:"#E8E8E8", letterSpacing:4, marginBottom:32 }}>
+            {fmtTimer(timerSeg)}
+          </div>
+
+          {guardado && (
+            <div style={{ background:"#0D2E1A", border:"1px solid #3FB950", borderRadius:8, padding:"12px 20px", marginBottom:20, color:"#3FB950", fontSize:14, fontWeight:600 }}>
+              ✅ Guardado — {Math.round(timerSeg/60)} minutos registrados
+            </div>
+          )}
+
+          {!timerActivo && !guardado && (
+            <button onClick={iniciar} style={{ background:"#3FB950", border:"none", borderRadius:14, padding:"20px 60px", fontSize:20, fontWeight:700, color:"#0D1117", cursor:"pointer", width:"100%", marginBottom:12 }}>
+              ▶ INICIAR
+            </button>
+          )}
+          {timerActivo && (
+            <button onClick={detener} style={{ background:"#F85149", border:"none", borderRadius:14, padding:"20px 60px", fontSize:20, fontWeight:700, color:"white", cursor:"pointer", width:"100%", marginBottom:12 }}>
+              ■ DETENER Y GUARDAR
+            </button>
+          )}
+          {guardado && (
+            <div style={{ display:"flex", gap:12 }}>
+              <button onClick={()=>{ setTimerSeg(0); setGuardado(false); iniciar(); }}
+                style={{ flex:1, background:"#21262D", border:"1px solid #30363D", borderRadius:10, padding:"14px", fontSize:14, fontWeight:600, color:"#E8E8E8", cursor:"pointer" }}>
+                ▶ Nueva tarea igual
+              </button>
+              <button onClick={reset}
+                style={{ flex:1, background:"#C8A96E", border:"none", borderRadius:10, padding:"14px", fontSize:14, fontWeight:700, color:"#0D1117", cursor:"pointer" }}>
+                ✓ Terminar
+              </button>
+            </div>
+          )}
+          {!timerActivo && !guardado && (
+            <button onClick={()=>setStep("proyecto")} style={{ marginTop:12, background:"transparent", border:"1px solid #30363D", borderRadius:8, padding:"10px 20px", color:"#8B949E", cursor:"pointer", width:"100%" }}>← Volver</button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// BIBLIOTECA DE PROCEDIMIENTOS
+// ═══════════════════════════════════════════════════════
+const CATS_BIBLIOTECA = ["Manufactura","Operativo","Materiales y Acabados","Administrativo","Seguridad"];
+
+export function Biblioteca({ supabase }) {
+  const [docs, setDocs] = useState([]);
+  const [modal, setModal] = useState(null);
+  const [form, setForm] = useState({});
+  const [filtro, setFiltro] = useState("Todos");
+  const [busqueda, setBusqueda] = useState("");
+  const [detalle, setDetalle] = useState(null);
+
+  useState(() => {
+    supabase.from("biblioteca").select("*").then(r => setDocs(r.data||[]));
+  }, []);
+
+  const filtrados = docs.filter(d => {
+    const matchCat = filtro==="Todos" || d.categoria===filtro;
+    const matchBusq = !busqueda || d.titulo.toLowerCase().includes(busqueda.toLowerCase()) || (d.descripcion||"").toLowerCase().includes(busqueda.toLowerCase());
+    return matchCat && matchBusq;
+  }).sort((a,b) => a.titulo.localeCompare(b.titulo));
+
+  const save = async () => {
+    if (!form.titulo) return;
+    const data = { titulo:form.titulo, categoria:form.categoria||"Manufactura", descripcion:form.descripcion||"", pasos:form.pasos||"", notas:form.notas||"", version:form.version||"1.0" };
+    if (form.id) {
+      await supabase.from("biblioteca").update(data).eq("id",form.id);
+      setDocs(docs.map(d=>d.id===form.id?{...data,id:form.id}:d));
+    } else {
+      const { data: newD } = await supabase.from("biblioteca").insert(data).select().single();
+      setDocs([...docs, newD]);
+    }
+    setModal(null);
+  };
+
+  const catColor = { "Manufactura":"#58A6FF","Operativo":"#C8A96E","Materiales y Acabados":"#3FB950","Administrativo":"#BC8CFF","Seguridad":"#F85149" };
+
+  return (
+    <div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+        <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:"#E8E8E8" }}>📚 Biblioteca</div>
+        <button onClick={()=>{ setForm({categoria:"Manufactura",version:"1.0"}); setModal("nuevo"); }}
+          style={{ background:"#21262D", color:"#E8E8E8", border:"1px solid #30363D", borderRadius:7, padding:"9px 18px", fontSize:13, fontWeight:600, cursor:"pointer" }}>
+          + Nuevo procedimiento
+        </button>
+      </div>
+
+      {/* Buscador */}
+      <input value={busqueda} onChange={e=>setBusqueda(e.target.value)} placeholder="Buscar procedimiento..."
+        style={{ width:"100%", background:"#161B22", border:"1px solid #30363D", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#E8E8E8", outline:"none", marginBottom:14, boxSizing:"border-box" }} />
+
+      {/* Filtros por categoría */}
+      <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap" }}>
+        {["Todos",...CATS_BIBLIOTECA].map(c=>(
+          <button key={c} onClick={()=>setFiltro(c)} style={{ padding:"5px 12px", borderRadius:20, fontSize:12, fontWeight:600, cursor:"pointer", border:`1.5px solid ${filtro===c?"#C8A96E":"#30363D"}`, background:filtro===c?"#2D1F00":"transparent", color:filtro===c?"#C8A96E":"#8B949E" }}>
+            {c}
+          </button>
+        ))}
+      </div>
+
+      {/* Lista */}
+      {filtrados.length===0 && (
+        <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:40, textAlign:"center", color:"#8B949E" }}>
+          {docs.length===0 ? "La biblioteca está vacía. Agregá el primer procedimiento." : "Sin resultados para esta búsqueda."}
+        </div>
+      )}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+        {filtrados.map(d=>(
+          <div key={d.id} style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:"14px 16px", cursor:"pointer", borderLeft:`3px solid ${catColor[d.categoria]||"#30363D"}` }}
+            onClick={()=>setDetalle(d)}
+            onMouseEnter={e=>e.currentTarget.style.borderColor="#30363D"}
+            onMouseLeave={e=>e.currentTarget.style.borderColor="#21262D"}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:6 }}>
+              <span style={{ fontWeight:700, fontSize:13, color:"#E8E8E8" }}>{d.titulo}</span>
+              <button onClick={e=>{ e.stopPropagation(); setForm({...d}); setModal("nuevo"); }}
+                style={{ background:"none", border:"none", cursor:"pointer", color:"#8B949E", fontSize:12 }}>✏</button>
+            </div>
+            <div style={{ fontSize:11, color:catColor[d.categoria]||"#8B949E", fontWeight:600, marginBottom:4 }}>{d.categoria}</div>
+            {d.descripcion && <div style={{ fontSize:12, color:"#8B949E", lineHeight:1.4 }}>{d.descripcion.slice(0,80)}{d.descripcion.length>80?"...":""}</div>}
+            {d.version && <div style={{ fontSize:10, color:"#30363D", marginTop:6 }}>v{d.version}</div>}
+          </div>
+        ))}
+      </div>
+
+      {/* Modal detalle */}
+      {detalle && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.7)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+          <div style={{ background:"#161B22", border:"1px solid #30363D", borderRadius:12, width:"100%", maxWidth:600, maxHeight:"88vh", overflow:"auto", boxShadow:"0 20px 60px rgba(0,0,0,0.6)" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 24px 14px", borderBottom:"1px solid #21262D" }}>
+              <div>
+                <div style={{ fontFamily:"'Georgia',serif", fontSize:17, fontWeight:600, color:"#E8E8E8" }}>{detalle.titulo}</div>
+                <div style={{ fontSize:11, color:catColor[detalle.categoria]||"#8B949E", fontWeight:600, marginTop:2 }}>{detalle.categoria} · v{detalle.version}</div>
+              </div>
+              <button onClick={()=>setDetalle(null)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:20, color:"#8B949E" }}>×</button>
+            </div>
+            <div style={{ padding:"20px 24px 24px" }}>
+              {detalle.descripcion && <div style={{ color:"#E8E8E8", fontSize:13, lineHeight:1.6, marginBottom:16 }}>{detalle.descripcion}</div>}
+              {detalle.pasos && (
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", textTransform:"uppercase", letterSpacing:0.5, marginBottom:10 }}>Pasos</div>
+                  {detalle.pasos.split("\n").filter(Boolean).map((paso,i)=>(
+                    <div key={i} style={{ display:"flex", gap:10, marginBottom:8 }}>
+                      <span style={{ width:22, height:22, borderRadius:"50%", background:"#21262D", color:"#C8A96E", fontSize:11, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{i+1}</span>
+                      <span style={{ fontSize:13, color:"#E8E8E8", lineHeight:1.5 }}>{paso}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {detalle.notas && (
+                <div style={{ background:"#21262D", borderRadius:8, padding:"12px 14px", borderLeft:"3px solid #C8A96E" }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:"#C8A96E", marginBottom:4 }}>NOTAS</div>
+                  <div style={{ fontSize:12, color:"#8B949E" }}>{detalle.notas}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal nuevo/editar */}
+      {modal==="nuevo" && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.7)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+          <div style={{ background:"#161B22", border:"1px solid #30363D", borderRadius:12, width:"100%", maxWidth:560, maxHeight:"88vh", overflow:"auto", boxShadow:"0 20px 60px rgba(0,0,0,0.6)" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 24px 14px", borderBottom:"1px solid #21262D" }}>
+              <span style={{ fontFamily:"'Georgia',serif", fontSize:17, fontWeight:600, color:"#E8E8E8" }}>{form.id?"Editar procedimiento":"Nuevo procedimiento"}</span>
+              <button onClick={()=>setModal(null)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:20, color:"#8B949E" }}>×</button>
+            </div>
+            <div style={{ padding:"20px 24px 24px" }}>
+              {[{l:"Título",k:"titulo",ph:"Ej: Proceso de lacado en MDF"}].map(f=>(
+                <div key={f.k} style={{ marginBottom:14 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>{f.l}</div>
+                  <input value={form[f.k]||""} onChange={e=>setForm({...form,[f.k]:e.target.value})} placeholder={f.ph}
+                    style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none", boxSizing:"border-box" }}/>
+                </div>
+              ))}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:14 }}>
+                <div>
+                  <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>Categoría</div>
+                  <select value={form.categoria||"Manufactura"} onChange={e=>setForm({...form,categoria:e.target.value})}
+                    style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none" }}>
+                    {CATS_BIBLIOTECA.map(c=><option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>Versión</div>
+                  <input value={form.version||"1.0"} onChange={e=>setForm({...form,version:e.target.value})}
+                    style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none", boxSizing:"border-box" }}/>
+                </div>
+              </div>
+              <div style={{ marginBottom:14 }}>
+                <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>Descripción</div>
+                <textarea value={form.descripcion||""} onChange={e=>setForm({...form,descripcion:e.target.value})} placeholder="¿Para qué sirve este procedimiento?"
+                  style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none", boxSizing:"border-box", resize:"vertical", minHeight:70 }}/>
+              </div>
+              <div style={{ marginBottom:14 }}>
+                <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>Pasos (uno por línea)</div>
+                <textarea value={form.pasos||""} onChange={e=>setForm({...form,pasos:e.target.value})} placeholder={"Limpiar la superficie\nAplicar sellador\nLijar con lija 220\nAplicar primera mano de laca"}
+                  style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none", boxSizing:"border-box", resize:"vertical", minHeight:120 }}/>
+              </div>
+              <div style={{ marginBottom:14 }}>
+                <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>Notas importantes</div>
+                <textarea value={form.notas||""} onChange={e=>setForm({...form,notas:e.target.value})}
+                  style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none", boxSizing:"border-box", resize:"vertical", minHeight:60 }}/>
+              </div>
+              <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+                {form.id && <button onClick={async()=>{ if(confirm("¿Eliminar?")){await supabase.from("biblioteca").delete().eq("id",form.id); setDocs(docs.filter(d=>d.id!==form.id)); setModal(null); } }}
+                  style={{ background:"#2D0F0F", color:"#F85149", border:"none", borderRadius:7, padding:"9px 18px", fontSize:13, fontWeight:600, cursor:"pointer" }}>Eliminar</button>}
+                <button onClick={()=>setModal(null)} style={{ background:"transparent", color:"#E8E8E8", border:"1.5px solid #30363D", borderRadius:7, padding:"9px 18px", fontSize:13, fontWeight:600, cursor:"pointer" }}>Cancelar</button>
+                <button onClick={save} style={{ background:"#21262D", color:"#E8E8E8", border:"1px solid #30363D", borderRadius:7, padding:"9px 18px", fontSize:13, fontWeight:600, cursor:"pointer" }}>Guardar</button>
               </div>
             </div>
           </div>
