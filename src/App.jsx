@@ -1,5 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-import { LeadTracker, Taller, RecursoHumano, Marketing } from "./modules.jsx";
+import { LeadTracker, Taller, RecursoHumano, Marketing, ModoTaller, Biblioteca } from "./modules.jsx";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -10,15 +10,19 @@ import { useState, useEffect, useRef } from "react";
 
 // ── PALETTE (from Pértiga brand guidelines) ──────────────────────────────────
 const C = {
-  tinta:   "#1A1714",
+  tinta:   "#0D1117",
   dorado:  "#C8A96E",
-  musgo:   "#3D5A52",
-  crema:   "#F5F0E8",
-  piedra:  "#8A8278",
-  blanco:  "#FDFCFA",
-  rojo:    "#C0392B",
-  verde:   "#27AE60",
-  azul:    "#2980B9",
+  musgo:   "#3FB950",
+  crema:   "#161B22",
+  piedra:  "#8B949E",
+  blanco:  "#161B22",
+  rojo:    "#F85149",
+  verde:   "#3FB950",
+  azul:    "#58A6FF",
+  card:    "#161B22",
+  border:  "#30363D",
+  text:    "#E8E8E8",
+  textsub: "#8B949E",
 };
 
 // ── INITIAL DATA ─────────────────────────────────────────────────────────────
@@ -56,7 +60,7 @@ const INIT_RECORDATORIOS = [
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 const fmt = (n) => `₡${Number(n).toLocaleString("es-CR")}`;
 const fmtDate = (d) => { if (!d) return ""; const [y,m,dd] = d.split("-"); return `${dd}/${m}/${y}`; };
-const today = "2026-06-15";
+const today = new Date().toISOString().split("T")[0];
 const daysLeft = (d) => { const diff = (new Date(d) - new Date(today)) / 86400000; return Math.round(diff); };
 
 const ESTADOS = ["Cotización","Diseño","En fabricación","Instalación","Entregado","Cancelado"];
@@ -66,16 +70,16 @@ const TIPOS_REC = ["Entrega","Ventas","Maquinaria","Pago","Reunión","Otro"];
 // ── BADGE ─────────────────────────────────────────────────────────────────────
 function Badge({ label, color }) {
   const colors = {
-    "En fabricación": { bg: "#EAF4F0", text: C.musgo },
-    "Diseño":         { bg: "#FEF9EC", text: "#B8860B" },
-    "Cotización":     { bg: "#EAF2FB", text: C.azul },
-    "Instalación":    { bg: "#F0EAF8", text: "#7D3C98" },
-    "Entregado":      { bg: "#EAFAF1", text: C.verde },
-    "Cancelado":      { bg: "#FDECEA", text: C.rojo },
-    "Recibida":       { bg: "#EAFAF1", text: C.verde },
-    "Pendiente":      { bg: "#FEF9EC", text: "#B8860B" },
+    "En fabricación": { bg: "#0D2E1A", text: "#3FB950" },
+    "Diseño":         { bg: "#2D1F00", text: "#E3B341" },
+    "Cotización":     { bg: "#0C2044", text: "#58A6FF" },
+    "Instalación":    { bg: "#2A1A40", text: "#BC8CFF" },
+    "Entregado":      { bg: "#0D2E1A", text: "#3FB950" },
+    "Cancelado":      { bg: "#2D0F0F", text: "#F85149" },
+    "Recibida":       { bg: "#0D2E1A", text: "#3FB950" },
+    "Pendiente":      { bg: "#2D1F00", text: "#E3B341" },
   };
-  const s = colors[label] || { bg: "#F0F0F0", text: C.piedra };
+  const s = colors[label] || { bg: "#21262D", text: "#8B949E" };
   return (
     <span style={{ background: s.bg, color: s.text, borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: 600, letterSpacing: 0.3 }}>
       {label}
@@ -87,9 +91,9 @@ function Badge({ label, color }) {
 function Modal({ title, onClose, children }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(26,23,20,0.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div style={{ background: C.blanco, borderRadius: 12, width: "100%", maxWidth: 520, maxHeight: "85vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}>
+      <div style={{ background: "#161B22", borderRadius: 12, width: "100%", maxWidth: 520, maxHeight: "85vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.6)", border: "1px solid #30363D" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px 14px", borderBottom: `1px solid ${C.crema}` }}>
-          <span style={{ fontFamily: "'Georgia', serif", fontSize: 17, fontWeight: 600, color: C.tinta }}>{title}</span>
+          <span style={{ fontFamily: "'Georgia', serif", fontSize: 17, fontWeight: 600, color: "#E8E8E8" }}>{title}</span>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: C.piedra }}>×</button>
         </div>
         <div style={{ padding: "20px 24px 24px" }}>{children}</div>
@@ -102,7 +106,7 @@ function Modal({ title, onClose, children }) {
 const Inp = ({ label, ...p }) => (
   <div style={{ marginBottom: 14 }}>
     {label && <div style={{ fontSize: 11, fontWeight: 600, color: C.piedra, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>}
-    <input {...p} style={{ width: "100%", border: `1.5px solid #E2DDD6`, borderRadius: 6, padding: "8px 10px", fontSize: 13, color: C.tinta, background: C.blanco, outline: "none", boxSizing: "border-box", ...p.style }} />
+    <input {...p} style={{ width: "100%", border: `1.5px solid #30363D`, borderRadius: 6, padding: "8px 10px", fontSize: 13, color: "#E8E8E8", background: "#21262D", outline: "none", boxSizing: "border-box", ...p.style }} />
   </div>
 );
 const Sel = ({ label, children, ...p }) => (
@@ -116,15 +120,16 @@ const Sel = ({ label, children, ...p }) => (
 const Txt = ({ label, ...p }) => (
   <div style={{ marginBottom: 14 }}>
     {label && <div style={{ fontSize: 11, fontWeight: 600, color: C.piedra, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>}
-    <textarea {...p} style={{ width: "100%", border: `1.5px solid #E2DDD6`, borderRadius: 6, padding: "8px 10px", fontSize: 13, color: C.tinta, background: C.blanco, outline: "none", boxSizing: "border-box", resize: "vertical", minHeight: 70 }} />
+    <textarea {...p} style={{ width: "100%", border: `1.5px solid #30363D`, borderRadius: 6, padding: "8px 10px", fontSize: 13, color: "#E8E8E8", background: "#21262D", outline: "none", boxSizing: "border-box", resize: "vertical", minHeight: 70 }} />
   </div>
 );
 const Btn = ({ children, variant = "primary", ...p }) => {
   const styles = {
-    primary: { background: C.tinta, color: C.dorado, border: "none" },
-    ghost:   { background: "transparent", color: C.tinta, border: `1.5px solid #D0C9C0` },
-    danger:  { background: "#FDECEA", color: C.rojo, border: "none" },
-    accent:  { background: C.dorado, color: C.tinta, border: "none" },
+    primary: { background: "#21262D", color: "#E8E8E8", border: "1px solid #30363D" },
+    ghost:   { background: "transparent", color: "#E8E8E8", border: `1.5px solid #30363D` },
+    danger:  { background: "#2D0F0F", color: "#F85149", border: "none" },
+    accent:  { background: C.dorado, color: "#0D1117", border: "none" },
+    success: { background: "#0D2E1A", color: "#3FB950", border: "none" },
   };
   return (
     <button {...p} style={{ ...styles[variant], borderRadius: 7, padding: "9px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", ...p.style }}>
@@ -138,75 +143,138 @@ const Btn = ({ children, variant = "primary", ...p }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
-function Dashboard({ projects, ingresos, gastos, recordatorios, setTab }) {
+function Dashboard({ projects, ingresos, gastos, recordatorios, setTab, meta, setMeta, leads }) {
+  const [editMeta, setEditMeta] = useState(false);
+  const [metaInput, setMetaInput] = useState("");
+
   const totalIngresos = ingresos.reduce((s, i) => s + Number(i.monto), 0);
   const totalGastos   = gastos.reduce((s, g) => s + Number(g.monto), 0);
-  const pendientesCobrar = projects.reduce((s, p) => {
-    if (p.estado !== "Entregado" && p.estado !== "Cancelado") return s + (Number(p.monto) - Number(p.adelanto));
-    return s;
-  }, 0);
-  const activos = projects.filter(p => !["Entregado","Cancelado"].includes(p.estado));
-  const urgentes = recordatorios.filter(r => !r.hecho && daysLeft(r.fecha) <= 5).sort((a,b) => new Date(a.fecha)-new Date(b.fecha));
-  const proxEntregas = projects.filter(p => !["Entregado","Cancelado"].includes(p.estado)).sort((a,b) => new Date(a.entrega)-new Date(b.entrega)).slice(0,3);
+  const margen        = totalIngresos - totalGastos;
+  const activos       = projects.filter(p => !["Entregado","Cancelado"].includes(p.estado));
+  const porCobrar     = activos.reduce((s,p) => s + (Number(p.monto) - Number(p.adelanto)), 0);
 
-  const KPI = ({ label, value, sub, color }) => (
-    <div style={{ background: C.blanco, border: `1px solid #E8E2D8`, borderRadius: 10, padding: "18px 20px", flex: 1, minWidth: 140 }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: C.piedra, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: color || C.tinta, fontFamily: "'Georgia',serif" }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: C.piedra, marginTop: 3 }}>{sub}</div>}
+  const leadsActivos  = leads.filter(l => ["Nuevo","Contactado","Cotización enviada","Negociando"].includes(l.estado));
+  const valorPipeline = leadsActivos.reduce((s,l) => s + Number(l.monto_estimado||0), 0);
+
+  const urgentes      = recordatorios.filter(r => !r.hecho && daysLeft(r.fecha) <= 5).sort((a,b) => new Date(a.fecha)-new Date(b.fecha));
+  const proxEntregas  = activos.filter(p => p.entrega).sort((a,b) => new Date(a.entrega)-new Date(b.entrega)).slice(0,4);
+  const leadsVencidos = leadsActivos.filter(l => l.fecha_limite && daysLeft(l.fecha_limite) <= 3);
+  const pctMeta       = meta > 0 ? Math.min(100, Math.round(totalIngresos/meta*100)) : 0;
+
+  const hora = new Date().getHours();
+  const saludo = hora < 12 ? "Buenos días" : hora < 18 ? "Buenas tardes" : "Buenas noches";
+  const fechaHoy = new Date().toLocaleDateString("es-CR", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+
+  const KPI = ({ label, value, sub, color, onClick }) => (
+    <div onClick={onClick} style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:"16px 18px", cursor:onClick?"pointer":"default", transition:"border-color 0.2s" }}
+      onMouseEnter={e=>onClick&&(e.currentTarget.style.borderColor="#30363D")}
+      onMouseLeave={e=>onClick&&(e.currentTarget.style.borderColor="#21262D")}>
+      <div style={{ fontSize:10, fontWeight:600, color:"#8B949E", textTransform:"uppercase", letterSpacing:0.5, marginBottom:6 }}>{label}</div>
+      <div style={{ fontSize:22, fontWeight:700, color: color||"#E8E8E8", fontFamily:"'Georgia',serif" }}>{value}</div>
+      {sub && <div style={{ fontSize:11, color:"#8B949E", marginTop:3 }}>{sub}</div>}
     </div>
   );
 
   return (
     <div>
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontFamily: "'Georgia',serif", fontSize: 26, fontWeight: 700, color: C.tinta }}>Buenos días, Javier</div>
-        <div style={{ color: C.piedra, fontSize: 13, marginTop: 2 }}>Lunes 15 de junio, 2026 · Pértiga Mobiliario</div>
+      {/* Header */}
+      <div style={{ marginBottom:24 }}>
+        <div style={{ fontFamily:"'Georgia',serif", fontSize:26, fontWeight:700, color:"#E8E8E8" }}>{saludo}, Javier</div>
+        <div style={{ color:"#8B949E", fontSize:13, marginTop:2, textTransform:"capitalize" }}>{fechaHoy} · Pértiga Mobiliario</div>
       </div>
 
-      {/* KPIs */}
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
-        <KPI label="Ingresos del mes" value={fmt(totalIngresos)} sub="Junio 2026" color={C.musgo} />
-        <KPI label="Gastos del mes" value={fmt(totalGastos)} sub="Junio 2026" color={C.rojo} />
-        <KPI label="Margen neto" value={fmt(totalIngresos - totalGastos)} sub={`${Math.round((totalIngresos - totalGastos)/totalIngresos*100)}% del ingreso`} color={C.dorado} />
-        <KPI label="Por cobrar" value={fmt(pendientesCobrar)} sub={`${activos.length} proyectos activos`} />
+      {/* KPIs principales */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:16 }}>
+        <KPI label="Facturación del mes" value={fmt(totalIngresos)} sub={new Date().toLocaleDateString("es-CR",{month:"long"})} color="#3FB950" onClick={()=>setTab("contabilidad")} />
+        <KPI label="Margen neto" value={fmt(margen)} sub={totalIngresos>0?`${Math.round(margen/totalIngresos*100)}% del ingreso`:""} color={margen>=0?"#C8A96E":"#F85149"} />
+        <KPI label="Por cobrar" value={fmt(porCobrar)} sub={`${activos.length} proyectos activos`} color="#58A6FF" onClick={()=>setTab("proyectos")} />
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:20 }}>
+        <KPI label="Pipeline leads" value={fmt(valorPipeline)} sub={`${leadsActivos.length} leads activos`} color="#BC8CFF" onClick={()=>setTab("leads")} />
+        <KPI label="Gastos del mes" value={fmt(totalGastos)} sub="Total egresos" color="#F85149" onClick={()=>setTab("contabilidad")} />
+        <KPI label="Pendientes urgentes" value={urgentes.length} sub="Esta semana" color={urgentes.length>0?"#F85149":"#3FB950"} onClick={()=>setTab("recordatorios")} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        {/* Urgentes */}
-        <div style={{ background: C.blanco, border: `1px solid #E8E2D8`, borderRadius: 10, padding: 18 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 12 }}>
-            <span style={{ fontWeight: 700, color: C.tinta, fontSize: 13 }}>⚡ Urgente esta semana</span>
-            <span onClick={() => setTab("recordatorios")} style={{ fontSize: 11, color: C.dorado, cursor: "pointer", fontWeight: 600 }}>Ver todos →</span>
-          </div>
-          {urgentes.length === 0 && <div style={{ color: C.piedra, fontSize: 12 }}>Sin pendientes urgentes 🎉</div>}
-          {urgentes.map(r => (
-            <div key={r.id} style={{ display:"flex", alignItems:"center", gap: 8, padding: "7px 0", borderBottom: `1px solid ${C.crema}` }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: daysLeft(r.fecha) < 0 ? C.rojo : daysLeft(r.fecha) <= 2 ? "#E67E22" : C.dorado, flexShrink: 0 }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.tinta }}>{r.texto}</div>
-                <div style={{ fontSize: 11, color: C.piedra }}>{fmtDate(r.fecha)} · {daysLeft(r.fecha) < 0 ? `${Math.abs(daysLeft(r.fecha))} días vencido` : daysLeft(r.fecha) === 0 ? "Hoy" : `En ${daysLeft(r.fecha)} días`}</div>
-              </div>
+      {/* Meta mensual */}
+      <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:"16px 20px", marginBottom:16 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+          <div>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <span style={{ fontSize:12, fontWeight:600, color:"#8B949E", textTransform:"uppercase", letterSpacing:0.5 }}>
+                Meta mensual · {new Date().toLocaleDateString("es-CR",{month:"long",year:"numeric"})}
+              </span>
+              <button onClick={()=>{ setMetaInput(meta); setEditMeta(true); }} style={{ background:"#21262D", border:"1px solid #30363D", borderRadius:4, padding:"2px 8px", fontSize:10, color:"#C8A96E", cursor:"pointer" }}>✏ Editar</button>
             </div>
-          ))}
+            {editMeta ? (
+              <div style={{ display:"flex", gap:8, alignItems:"center", marginTop:6 }}>
+                <input type="number" value={metaInput} onChange={e=>setMetaInput(e.target.value)}
+                  style={{ background:"#21262D", border:"1px solid #30363D", borderRadius:4, padding:"4px 8px", color:"#E8E8E8", fontSize:13, width:140, outline:"none" }} />
+                <button onClick={()=>{ setMeta(Number(metaInput)); setEditMeta(false); }}
+                  style={{ background:"#C8A96E", border:"none", borderRadius:4, padding:"4px 10px", fontSize:12, color:"#0D1117", fontWeight:700, cursor:"pointer" }}>✓</button>
+                <button onClick={()=>setEditMeta(false)} style={{ background:"transparent", border:"none", color:"#8B949E", cursor:"pointer" }}>✕</button>
+              </div>
+            ) : (
+              <div style={{ fontSize:20, fontWeight:700, color:"#E8E8E8", fontFamily:"'Georgia',serif", marginTop:4 }}>
+                {fmt(totalIngresos)} <span style={{ fontSize:13, color:"#8B949E", fontWeight:400 }}>de {fmt(meta)}</span>
+              </div>
+            )}
+          </div>
+          <div style={{ textAlign:"right" }}>
+            <div style={{ fontFamily:"'Georgia',serif", fontSize:32, fontWeight:700, color: pctMeta>=100?"#3FB950":pctMeta>=70?"#C8A96E":"#E8E8E8" }}>{pctMeta}%</div>
+            <div style={{ fontSize:11, color:"#8B949E" }}>completado</div>
+          </div>
+        </div>
+        <div style={{ background:"#21262D", borderRadius:4, height:8, overflow:"hidden" }}>
+          <div style={{ background: pctMeta>=100?"#3FB950":pctMeta>=70?"#C8A96E":"#58A6FF", width:`${pctMeta}%`, height:"100%", borderRadius:4, transition:"width 1s" }} />
+        </div>
+        {meta > totalIngresos && <div style={{ fontSize:11, color:"#8B949E", marginTop:4 }}>Faltan {fmt(meta-totalIngresos)} para la meta</div>}
+      </div>
+
+      {/* Alertas + Entregas */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
+
+        {/* Urgentes */}
+        <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:16 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <span style={{ fontWeight:700, color:"#E8E8E8", fontSize:13 }}>⚡ Urgente esta semana</span>
+            <span onClick={()=>setTab("recordatorios")} style={{ fontSize:11, color:"#C8A96E", cursor:"pointer" }}>Ver todos →</span>
+          </div>
+          {urgentes.length===0 && <div style={{ color:"#8B949E", fontSize:12 }}>Sin pendientes urgentes 🎉</div>}
+          {urgentes.slice(0,5).map(r => {
+            const d = daysLeft(r.fecha);
+            const col = d<0?"#F85149":d<=2?"#E3B341":"#C8A96E";
+            return (
+              <div key={r.id} style={{ display:"flex", alignItems:"center", gap:8, padding:"7px 0", borderBottom:"1px solid #21262D" }}>
+                <div style={{ width:6, height:6, borderRadius:"50%", background:col, flexShrink:0 }} />
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:12, fontWeight:600, color:"#E8E8E8" }}>{r.texto}</div>
+                  <div style={{ fontSize:11, color:col }}>
+                    {fmtDate(r.fecha)} · {d<0?`${Math.abs(d)}d vencido`:d===0?"Hoy":`En ${d}d`}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Próximas entregas */}
-        <div style={{ background: C.blanco, border: `1px solid #E8E2D8`, borderRadius: 10, padding: 18 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 12 }}>
-            <span style={{ fontWeight: 700, color: C.tinta, fontSize: 13 }}>📦 Próximas entregas</span>
-            <span onClick={() => setTab("proyectos")} style={{ fontSize: 11, color: C.dorado, cursor: "pointer", fontWeight: 600 }}>Ver todos →</span>
+        <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:16 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <span style={{ fontWeight:700, color:"#E8E8E8", fontSize:13 }}>📦 Próximas entregas</span>
+            <span onClick={()=>setTab("proyectos")} style={{ fontSize:11, color:"#C8A96E", cursor:"pointer" }}>Ver todos →</span>
           </div>
+          {proxEntregas.length===0 && <div style={{ color:"#8B949E", fontSize:12 }}>Sin entregas próximas</div>}
           {proxEntregas.map(p => {
             const d = daysLeft(p.entrega);
+            const col = d<0?"#F85149":d<=3?"#E3B341":"#8B949E";
             return (
-              <div key={p.id} style={{ padding: "8px 0", borderBottom: `1px solid ${C.crema}` }}>
+              <div key={p.id} style={{ padding:"8px 0", borderBottom:"1px solid #21262D" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: C.tinta }}>{p.nombre}</div>
+                  <span style={{ fontSize:12, fontWeight:600, color:"#E8E8E8" }}>{p.nombre}</span>
                   <Badge label={p.estado} />
                 </div>
-                <div style={{ fontSize: 11, color: d < 0 ? C.rojo : d <= 3 ? "#E67E22" : C.piedra, marginTop: 2 }}>
-                  {fmtDate(p.entrega)} · {d < 0 ? `${Math.abs(d)} días de retraso` : d === 0 ? "Hoy" : `En ${d} días`}
+                <div style={{ fontSize:11, color:col, marginTop:2 }}>
+                  {fmtDate(p.entrega)} · {d<0?`${Math.abs(d)}d retraso`:d===0?"Hoy":`En ${d}d`}
                 </div>
               </div>
             );
@@ -214,23 +282,59 @@ function Dashboard({ projects, ingresos, gastos, recordatorios, setTab }) {
         </div>
       </div>
 
-      {/* Meta facturación */}
-      <div style={{ background: C.tinta, borderRadius: 10, padding: "18px 22px", marginTop: 16, display:"flex", alignItems:"center", gap: 20 }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ color: C.dorado, fontSize: 11, fontWeight: 600, letterSpacing: 0.5, textTransform:"uppercase", marginBottom: 4 }}>Meta mensual · Junio 2026</div>
-          <div style={{ color: C.crema, fontSize: 13, marginBottom: 8 }}>₡2,500,000 meta · {fmt(totalIngresos)} facturado</div>
-          <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 4, height: 8, overflow: "hidden" }}>
-            <div style={{ background: C.dorado, width: `${Math.min(100, Math.round(totalIngresos/2500000*100))}%`, height: "100%", borderRadius: 4, transition: "width 0.8s" }} />
+      {/* Leads activos + Alertas marketing */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+
+        {/* Pipeline leads */}
+        <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:16 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <span style={{ fontWeight:700, color:"#E8E8E8", fontSize:13 }}>◎ Pipeline activo</span>
+            <span onClick={()=>setTab("leads")} style={{ fontSize:11, color:"#C8A96E", cursor:"pointer" }}>Ver todos →</span>
           </div>
+          {leadsActivos.length===0 && <div style={{ color:"#8B949E", fontSize:12 }}>Sin leads activos</div>}
+          {leadsActivos.slice(0,4).map(l => {
+            const d = l.fecha_limite ? daysLeft(l.fecha_limite) : null;
+            return (
+              <div key={l.id} style={{ padding:"7px 0", borderBottom:"1px solid #21262D" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <span style={{ fontSize:12, fontWeight:600, color:"#E8E8E8" }}>{l.nombre}</span>
+                  {l.monto_estimado>0 && <span style={{ fontSize:11, color:"#3FB950", fontWeight:600 }}>{fmt(l.monto_estimado)}</span>}
+                </div>
+                <div style={{ display:"flex", justifyContent:"space-between" }}>
+                  <span style={{ fontSize:11, color:"#8B949E" }}>{l.estado}</span>
+                  {d!==null && <span style={{ fontSize:10, color:d<0?"#F85149":d<=2?"#E3B341":"#8B949E", fontWeight:600 }}>
+                    {d<0?`${Math.abs(d)}d vencido`:d===0?"Hoy":`${d}d`}
+                  </span>}
+                </div>
+              </div>
+            );
+          })}
         </div>
-        <div style={{ textAlign:"right" }}>
-          <div style={{ fontFamily:"'Georgia',serif", fontSize: 28, fontWeight: 700, color: C.dorado }}>{Math.round(totalIngresos/2500000*100)}%</div>
-          <div style={{ color: C.piedra, fontSize: 11 }}>completado</div>
+
+        {/* Alertas financieras */}
+        <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:16 }}>
+          <div style={{ fontWeight:700, color:"#E8E8E8", fontSize:13, marginBottom:12 }}>💰 Resumen financiero</div>
+          {[
+            { l:"Facturado", v:fmt(totalIngresos), c:"#3FB950" },
+            { l:"Gastos", v:fmt(totalGastos), c:"#F85149" },
+            { l:"Margen", v:fmt(margen), c:margen>=0?"#C8A96E":"#F85149" },
+            { l:"Por cobrar", v:fmt(porCobrar), c:"#58A6FF" },
+          ].map(k=>(
+            <div key={k.l} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:"1px solid #21262D" }}>
+              <span style={{ fontSize:12, color:"#8B949E" }}>{k.l}</span>
+              <span style={{ fontSize:13, fontWeight:700, color:k.c }}>{k.v}</span>
+            </div>
+          ))}
+          <div style={{ marginTop:10, padding:"8px 10px", background:"#21262D", borderRadius:6 }}>
+            <div style={{ fontSize:10, color:"#8B949E", textTransform:"uppercase", letterSpacing:0.4 }}>Proyección si cerrás pipeline</div>
+            <div style={{ fontSize:16, fontWeight:700, color:"#C8A96E", fontFamily:"'Georgia',serif" }}>{fmt(totalIngresos+valorPipeline)}</div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
 
 // ── PROYECTOS ─────────────────────────────────────────────────────────────────
 function Proyectos({ projects, setProjects }) {
@@ -519,9 +623,9 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
             </div>
           ))}
           <div style={{ marginTop:18, paddingTop:14, borderTop:`1px solid ${C.crema}` }}>
-            <div style={{ fontWeight:700, fontSize:13, color:C.tinta, marginBottom:10 }}>Meta mensual (Junio 2026)</div>
+            <div style={{ fontWeight:700, fontSize:13, color:C.tinta, marginBottom:10 }}>Meta mensual ({new Date().toLocaleDateString("es-CR",{month:"long",year:"numeric"})})</div>
             <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, color:C.piedra, marginBottom:4 }}>
-              <span>₡2,500,000 meta</span><span>{fmt(totalI)} facturado</span>
+              <span>{fmt(2500000)} meta</span><span>{fmt(totalI)} facturado</span>
             </div>
             <div style={{ background:"#E8E2D8", borderRadius:4, height:10 }}>
               <div style={{ background: C.musgo, width:`${Math.min(100,Math.round(totalI/2500000*100))}%`, height:"100%", borderRadius:4 }} />
@@ -859,7 +963,7 @@ function Recordatorios({ recordatorios, setRecordatorios }) {
 }
 
 // ── ASISTENTE IA ──────────────────────────────────────────────────────────────
-function AsistenteIA({ projects, ingresos, gastos, recordatorios, proveedores, ocs }) {
+function AsistenteIA({ projects, ingresos, gastos, recordatorios, proveedores, ocs, leads, meta }) {
   const [msgs, setMsgs] = useState([
     { role:"assistant", text:"Hola Javier 👋 Soy el asistente de Pértiga. Puedo analizar tus proyectos, contabilidad, proveedores y recordatorios. ¿En qué te ayudo hoy?" }
   ]);
@@ -885,11 +989,21 @@ RECORDATORIOS PENDIENTES:
 ${recordatorios.filter(r=>!r.hecho).map(r => `- ${r.texto} | ${r.fecha} | ${r.tipo}`).join("\n")}
 
 PROVEEDORES: ${proveedores.map(p=>p.nombre).join(", ")}
-GASTOS MARKETING: ₡${gastos.filter(g=>g.categoria==="Marketing").reduce((s,g)=>s+Number(g.monto),0).toLocaleString()}
-LEADS POR CANAL: ${["Instagram","WhatsApp","Referido","Facebook"].map(c=>`${c}: ${leads.filter(l=>l.fuente===c).length}`).join(", ")}
 ÓRDENES PENDIENTES: ${ocs.filter(o=>o.estado==="Pendiente").map(o=>`${o.proveedor}: ${o.items} (₡${o.monto})`).join(", ")||"ninguna"}
 
-META MENSUAL JUNIO: ₡2,500,000
+LEADS EN PIPELINE:
+- Total: ${leads.length} | Activos: ${leads.filter(l=>["Nuevo","Contactado","Cotizaci\u00f3n enviada","Negociando"].includes(l.estado)).length} | Ganados: ${leads.filter(l=>l.estado==="Cerrado ganado").length}
+- Valor pipeline: ₡${leads.filter(l=>["Nuevo","Contactado","Cotizaci\u00f3n enviada","Negociando"].includes(l.estado)).reduce((s,l)=>s+Number(l.monto_estimado||0),0).toLocaleString()}
+${leads.filter(l=>["Nuevo","Contactado","Cotizaci\u00f3n enviada","Negociando"].includes(l.estado)).map(l=>"- " + l.nombre + " | " + l.estado + " | CRC " + (l.monto_estimado||0)).join("\n")}
+
+MARKETING:
+- Gasto: ₡${gastos.filter(g=>g.categoria==="Marketing").reduce((s,g)=>s+Number(g.monto),0).toLocaleString()}
+- Leads Instagram: ${leads.filter(l=>l.fuente==="Instagram").length} | WhatsApp: ${leads.filter(l=>l.fuente==="WhatsApp").length} | Referido: ${leads.filter(l=>l.fuente==="Referido").length}
+
+EQUIPO (operarios activos): Javier, Bernal, Gabriel, Elías
+
+META MENSUAL: ₡${meta.toLocaleString()}
+SUGERENCIAS DE PREGUNTAS: estado del negocio, proyectos por vencer, leads pendientes de cotizar, costo por lead, meta del mes
 `;
 
   const send = async () => {
@@ -1026,6 +1140,7 @@ export default function App() {
   const [ocs, setOcs]                 = useState([]);
   const [recordatorios, setRecordatorios] = useState([]);
   const [leads, setLeads] = useState([]);
+  const [meta, setMeta] = useState(2500000);
 
   // Load all data from Supabase on mount
   useEffect(() => {
@@ -1063,30 +1178,32 @@ export default function App() {
     { id:"taller",        label:"Taller",        icon:"⚙" },
     { id:"rrhh",          label:"Equipo",        icon:"👤" },
     { id:"marketing",     label:"Marketing",     icon:"📣" },
+    { id:"taller-tablet", label:"Modo Taller",    icon:"⏱" },
+    { id:"biblioteca",    label:"Biblioteca",     icon:"📚" },
     { id:"integraciones", label:"Integraciones",icon:"⊙" },
   ];
 
   if (loading) return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100vh", background:C.crema, flexDirection:"column", gap:16 }}>
-      <div style={{ fontFamily:"'Georgia',serif", fontSize:28, fontWeight:700, color:C.tinta }}>PÉRTIGA</div>
-      <div style={{ color:C.piedra, fontSize:13 }}>Cargando tu panel...</div>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100vh", background:"#0D1117", flexDirection:"column", gap:16 }}>
+      <img src="/logo.png" alt="Pértiga" style={{ height:48, marginBottom:8 }} />
+      <div style={{ color:"#8B949E", fontSize:13 }}>Cargando tu panel...</div>
     </div>
   );
 
   return (
-    <div style={{ fontFamily:"'DM Sans', system-ui, sans-serif", background:C.crema, minHeight:"100vh", display:"flex" }}>
+    <div style={{ fontFamily:"'DM Sans', system-ui, sans-serif", background:"#0D1117", minHeight:"100vh", display:"flex" }}>
       {/* SIDEBAR */}
-      <div style={{ width:200, background:C.tinta, flexShrink:0, display:"flex", flexDirection:"column", minHeight:"100vh" }}>
+      <div style={{ width:210, background:"#0D1117", borderRight:"1px solid #21262D", flexShrink:0, display:"flex", flexDirection:"column", minHeight:"100vh" }}>
         {/* Logo */}
         <div style={{ padding:"24px 20px 20px" }}>
-          <div style={{ fontFamily:"'Georgia',serif", fontSize:22, fontWeight:700, color:C.dorado, letterSpacing:1 }}>PÉRTIGA</div>
-          <div style={{ fontSize:10, color:"rgba(245,240,232,0.4)", letterSpacing:1.5, textTransform:"uppercase", marginTop:2 }}>Panel administrativo</div>
+          <img src="/logo.png" alt="Pértiga" style={{ height:32, marginBottom:6 }} />
+          <div style={{ fontSize:9, color:"#30363D", letterSpacing:1.5, textTransform:"uppercase", marginTop:2 }}>Panel administrativo</div>
         </div>
-        <div style={{ height:1, background:"rgba(255,255,255,0.08)", margin:"0 16px" }} />
+        <div style={{ height:1, background:"#21262D", margin:"0 16px" }} />
         {/* Nav */}
         <nav style={{ padding:"12px 10px", flex:1 }}>
           {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"9px 12px", borderRadius:8, border:"none", cursor:"pointer", marginBottom:2, background:tab===t.id?"rgba(200,169,110,0.15)":"transparent", color:tab===t.id?C.dorado:"rgba(245,240,232,0.6)", fontWeight:tab===t.id?700:400, fontSize:13, textAlign:"left", position:"relative" }}>
+            <button key={t.id} onClick={() => setTab(t.id)} style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"9px 12px", borderRadius:8, border:"none", cursor:"pointer", marginBottom:2, background:tab===t.id?"#21262D":"transparent", color:tab===t.id?"#E8E8E8":"#8B949E", fontWeight:tab===t.id?700:400, fontSize:13, textAlign:"left", position:"relative" }}>
               <span style={{ fontSize:15 }}>{t.icon}</span>
               <span>{t.label}</span>
               {t.badge > 0 && <span style={{ position:"absolute", right:10, background:C.rojo, color:"white", borderRadius:10, fontSize:10, fontWeight:700, padding:"1px 6px", minWidth:16, textAlign:"center" }}>{t.badge}</span>}
@@ -1095,18 +1212,18 @@ export default function App() {
         </nav>
         {/* Bottom */}
         <div style={{ padding:"14px 18px", borderTop:"1px solid rgba(255,255,255,0.08)" }}>
-          <div style={{ fontSize:11, color:"rgba(245,240,232,0.3)", lineHeight:1.4 }}>
-            <div style={{ fontWeight:600, color:"rgba(245,240,232,0.5)", marginBottom:2 }}>Javier · Fundador</div>
+          <div style={{ fontSize:11, color:"#8B949E", lineHeight:1.4 }}>
+            <div style={{ fontWeight:600, color:"#E8E8E8", marginBottom:2 }}>Javier · Fundador</div>
             v1.0 · Jun 2026
           </div>
         </div>
       </div>
 
       {/* MAIN */}
-      <div style={{ flex:1, overflow:"auto" }}>
-        <div style={{ maxWidth:900, margin:"0 auto", padding:"28px 24px" }}>
-          {tab === "dashboard"     && <Dashboard projects={projects} ingresos={ingresos} gastos={gastos} recordatorios={recordatorios} setTab={setTab} />}
-          {tab === "asistente"     && <AsistenteIA projects={projects} ingresos={ingresos} gastos={gastos} recordatorios={recordatorios} proveedores={proveedores} ocs={ocs} />}
+      <div style={{ flex:1, overflow:"auto", background:"#0D1117" }}>
+        <div style={{ maxWidth:960, margin:"0 auto", padding:"28px 24px" }}>
+          {tab === "dashboard"     && <Dashboard projects={projects} ingresos={ingresos} gastos={gastos} recordatorios={recordatorios} setTab={setTab} meta={meta} setMeta={setMeta} leads={leads} />}
+          {tab === "asistente"     && <AsistenteIA projects={projects} ingresos={ingresos} gastos={gastos} recordatorios={recordatorios} proveedores={proveedores} ocs={ocs} leads={leads} meta={meta} />}
           {tab === "proyectos"     && <Proyectos projects={projects} setProjects={setProjects} />}
           {tab === "contabilidad"  && <Contabilidad ingresos={ingresos} setIngresos={setIngresos} gastos={gastos} setGastos={setGastos} projects={projects} />}
           {tab === "proveedores"   && <Proveedores proveedores={proveedores} setProveedores={setProveedores} ocs={ocs} setOcs={setOcs} />}
@@ -1115,6 +1232,8 @@ export default function App() {
           {tab === "taller"        && <Taller supabase={supabase} projects={projects} />}
           {tab === "rrhh"          && <RecursoHumano supabase={supabase} />}
           {tab === "marketing"     && <Marketing supabase={supabase} leads={leads} gastos={gastos} />}
+          {tab === "taller-tablet" && <ModoTaller supabase={supabase} projects={projects} />}
+          {tab === "biblioteca"    && <Biblioteca supabase={supabase} />}
           {tab === "integraciones" && <Integraciones />}
         </div>
       </div>
