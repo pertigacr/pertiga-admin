@@ -1141,6 +1141,7 @@ export default function App() {
   const [recordatorios, setRecordatorios] = useState([]);
   const [leads, setLeads] = useState([]);
   const [meta, setMeta] = useState(2500000);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Load all data from Supabase on mount
   useEffect(() => {
@@ -1192,36 +1193,70 @@ export default function App() {
 
   return (
     <div style={{ fontFamily:"'DM Sans', system-ui, sans-serif", background:"#0D1117", minHeight:"100vh", display:"flex" }}>
+
+      {/* OVERLAY móvil */}
+      {sidebarOpen && (
+        <div onClick={()=>setSidebarOpen(false)}
+          style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.6)", zIndex:998 }} />
+      )}
+
       {/* SIDEBAR */}
-      <div style={{ width:210, background:"#0D1117", borderRight:"1px solid #21262D", flexShrink:0, display:"flex", flexDirection:"column", minHeight:"100vh" }}>
-        {/* Logo */}
-        <div style={{ padding:"24px 20px 20px" }}>
-          <img src="/logo.png" alt="Pértiga" style={{ height:32, marginBottom:6 }} />
-          <div style={{ fontSize:9, color:"#30363D", letterSpacing:1.5, textTransform:"uppercase", marginTop:2 }}>Panel administrativo</div>
+      <div style={{
+        width:210, background:"#0D1117", borderRight:"1px solid #21262D",
+        flexShrink:0, display:"flex", flexDirection:"column",
+        position:"fixed", left:0, top:0, bottom:0, zIndex:999,
+        transform:`translateX(${sidebarOpen ? "0" : "-100%"})`,
+        transition:"transform 0.25s ease",
+      }}
+        className="sidebar">
+        <style>{`@media(min-width:768px){.sidebar{transform:translateX(0)!important}}`}</style>
+        <div style={{ padding:"20px 20px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div>
+            <div style={{ fontFamily:"'Georgia',serif", fontSize:18, fontWeight:700, color:"#C8A96E", letterSpacing:1 }}>PÉRTIGA</div>
+            <div style={{ fontSize:9, color:"#30363D", letterSpacing:1.5, textTransform:"uppercase", marginTop:1 }}>Panel administrativo</div>
+          </div>
+          <button onClick={()=>setSidebarOpen(false)}
+            style={{ background:"none", border:"none", color:"#8B949E", cursor:"pointer", fontSize:18, display:"block" }}
+            className="close-btn">
+            <style>{`@media(min-width:768px){.close-btn{display:none!important}}`}</style>
+            ✕
+          </button>
         </div>
         <div style={{ height:1, background:"#21262D", margin:"0 16px" }} />
-        {/* Nav */}
-        <nav style={{ padding:"12px 10px", flex:1 }}>
+        <nav style={{ padding:"12px 10px", flex:1, overflowY:"auto" }}>
           {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"9px 12px", borderRadius:8, border:"none", cursor:"pointer", marginBottom:2, background:tab===t.id?"#21262D":"transparent", color:tab===t.id?"#E8E8E8":"#8B949E", fontWeight:tab===t.id?700:400, fontSize:13, textAlign:"left", position:"relative" }}>
+            <button key={t.id} onClick={() => { setTab(t.id); setSidebarOpen(false); }}
+              style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"9px 12px", borderRadius:8, border:"none", cursor:"pointer", marginBottom:2, background:tab===t.id?"#21262D":"transparent", color:tab===t.id?"#E8E8E8":"#8B949E", fontWeight:tab===t.id?700:400, fontSize:13, textAlign:"left", position:"relative" }}>
               <span style={{ fontSize:15 }}>{t.icon}</span>
               <span>{t.label}</span>
               {t.badge > 0 && <span style={{ position:"absolute", right:10, background:C.rojo, color:"white", borderRadius:10, fontSize:10, fontWeight:700, padding:"1px 6px", minWidth:16, textAlign:"center" }}>{t.badge}</span>}
             </button>
           ))}
         </nav>
-        {/* Bottom */}
-        <div style={{ padding:"14px 18px", borderTop:"1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ padding:"14px 18px", borderTop:"1px solid #21262D" }}>
           <div style={{ fontSize:11, color:"#8B949E", lineHeight:1.4 }}>
             <div style={{ fontWeight:600, color:"#E8E8E8", marginBottom:2 }}>Javier · Fundador</div>
-            v1.0 · Jun 2026
+            v2.0 · Ago 2026
           </div>
         </div>
       </div>
 
       {/* MAIN */}
-      <div style={{ flex:1, overflow:"auto", background:"#0D1117" }}>
-        <div style={{ maxWidth:960, margin:"0 auto", padding:"28px 24px" }}>
+      <div style={{ flex:1, overflow:"auto", background:"#0D1117", marginLeft:0 }}
+        className="main-content">
+        <style>{`@media(min-width:768px){.main-content{margin-left:210px!important}}`}</style>
+        {/* HEADER MÓVIL */}
+        <div style={{ position:"sticky", top:0, zIndex:100, background:"#0D1117", borderBottom:"1px solid #21262D", padding:"12px 16px", display:"flex", alignItems:"center", gap:12 }}
+          className="mobile-header">
+          <style>{`@media(min-width:768px){.mobile-header{display:none!important}}`}</style>
+          <button onClick={()=>setSidebarOpen(true)}
+            style={{ background:"none", border:"none", color:"#E8E8E8", cursor:"pointer", fontSize:20, padding:"2px 6px" }}>☰</button>
+          <div style={{ fontFamily:"'Georgia',serif", fontSize:16, fontWeight:700, color:"#C8A96E" }}>PÉRTIGA</div>
+          {pendientes > 0 && <span style={{ background:C.rojo, color:"white", borderRadius:10, fontSize:10, fontWeight:700, padding:"2px 7px", marginLeft:"auto" }}>{pendientes}</span>}
+        </div>
+        <div style={{ maxWidth:960, margin:"0 auto", padding:"28px 24px" }}
+          className="main-padding">
+        <style>{`@media(max-width:767px){.main-padding{padding:14px 12px!important}}`}</style>
           {tab === "dashboard"     && <Dashboard projects={projects} ingresos={ingresos} gastos={gastos} recordatorios={recordatorios} setTab={setTab} meta={meta} setMeta={setMeta} leads={leads} />}
           {tab === "asistente"     && <AsistenteIA projects={projects} ingresos={ingresos} gastos={gastos} recordatorios={recordatorios} proveedores={proveedores} ocs={ocs} leads={leads} meta={meta} />}
           {tab === "proyectos"     && <Proyectos projects={projects} setProjects={setProjects} />}
