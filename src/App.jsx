@@ -382,7 +382,7 @@ function Proyectos({ projects, setProjects }) {
       {/* Filtros */}
       <div style={{ display:"flex", gap: 8, marginBottom: 16, flexWrap:"wrap" }}>
         {["Todos","Residencial","Comercial","En fabricación","Cotización","Entregado"].map(f => (
-          <button key={f} onClick={() => setFiltro(f)} style={{ padding:"5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor:"pointer", border: `1.5px solid ${filtro===f ? C.tinta : "#D0C9C0"}`, background: filtro===f ? C.tinta : "transparent", color: filtro===f ? C.crema : C.piedra }}>
+          <button key={f} onClick={() => setFiltro(f)} style={{ padding:"5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor:"pointer", border: `1.5px solid ${filtro===f ? C.tinta : "#D0C9C0"}`, background: filtro===f ? "#2D1F00" : "transparent", color: filtro===f ? "#C8A96E" : "#8B949E" }}>
             {f}
           </button>
         ))}
@@ -571,7 +571,7 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
   };
 
   const TabBtn = ({ id, label }) => (
-    <button onClick={() => setTab(id)} style={{ padding:"7px 16px", borderRadius:6, fontSize:12, fontWeight:600, cursor:"pointer", border:"none", background: tab===id ? C.tinta : "transparent", color: tab===id ? C.crema : C.piedra }}>
+    <button onClick={() => setTab(id)} style={{ padding:"7px 16px", borderRadius:6, fontSize:12, fontWeight:600, cursor:"pointer", border:"none", background: tab===id ? "#21262D" : "transparent", color: tab===id ? "#E8E8E8" : "#8B949E" }}>
       {label}
     </button>
   );
@@ -649,7 +649,7 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
                 <div style={{ fontSize:13, fontWeight:600, color:"#E8E8E8" }}>{ing.desc}</div>
                 <div style={{ fontSize:11, color:"#8B949E" }}>{fmtDate(ing.fecha)}{ing.proyecto && ` · ${ing.proyecto}`}</div>
               </div>
-              <div style={{ fontWeight:700, color:C.musgo, fontSize:15 }}>+{fmt(ing.monto)}</div>
+              <div style={{ fontWeight:700, color:"#3FB950", fontSize:15 }}>+{fmt(ing.monto)}</div>
             </div>
           ))}
         </div>
@@ -670,7 +670,7 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
                 </div>
                 <div style={{ fontSize:11, color:"#8B949E" }}>{fmtDate(g.fecha)}{g.proyecto && ` · ${g.proyecto}`}</div>
               </div>
-              <div style={{ fontWeight:700, color:C.rojo, fontSize:15 }}>-{fmt(g.monto)}</div>
+              <div style={{ fontWeight:700, color:"#F85149", fontSize:15 }}>-{fmt(g.monto)}</div>
             </div>
           ))}
         </div>
@@ -784,7 +784,7 @@ function Proveedores({ proveedores, setProveedores, ocs, setOcs }) {
                 </div>
                 <div style={{ textAlign:"right" }}>
                   <div style={{ fontSize:11, background:"#21262D", color:"#8B949E", padding:"3px 8px", borderRadius:4, fontWeight:600 }}>{p.condicion}</div>
-                  {p.email && <div style={{ fontSize:11, color:C.azul, marginTop:4 }}>{p.email}</div>}
+                  {p.email && <div style={{ fontSize:11, color:"#58A6FF", marginTop:4 }}>{p.email}</div>}
                 </div>
               </div>
               {p.notas && <div style={{ fontSize:11, color:"#8B949E", marginTop:8, fontStyle:"italic" }}>{p.notas}</div>}
@@ -895,11 +895,11 @@ function Recordatorios({ recordatorios, setRecordatorios }) {
   };
 
   const urgencyColor = (r) => {
-    if (r.hecho) return C.verde;
+    if (r.hecho) return "#3FB950";
     const d = daysLeft(r.fecha);
-    if (d < 0) return C.rojo;
-    if (d <= 2) return "#E67E22";
-    return C.musgo;
+    if (d < 0) return "#F85149";
+    if (d <= 2) return "#E3B341";
+    return "#C8A96E";
   };
 
   return (
@@ -911,7 +911,7 @@ function Recordatorios({ recordatorios, setRecordatorios }) {
 
       <div style={{ display:"flex", gap:8, marginBottom:14 }}>
         {["Pendientes","Todos","Completados"].map(f => (
-          <button key={f} onClick={() => setFiltro(f)} style={{ padding:"6px 14px", borderRadius:20, fontSize:12, fontWeight:600, cursor:"pointer", border:`1.5px solid ${filtro===f?C.tinta:"#D0C9C0"}`, background:filtro===f?C.tinta:"transparent", color:filtro===f?C.crema:C.piedra }}>
+          <button key={f} onClick={() => setFiltro(f)} style={{ padding:"6px 14px", borderRadius:20, fontSize:12, fontWeight:600, cursor:"pointer", border:`1.5px solid ${filtro===f?"#C8A96E":"#30363D"}`, background:filtro===f?"#2D1F00":"transparent", color:filtro===f?"#C8A96E":"#8B949E" }}>
             {f}
           </button>
         ))}
@@ -927,7 +927,7 @@ function Recordatorios({ recordatorios, setRecordatorios }) {
                 {r.hecho && <span style={{ color:"white", fontSize:12 }}>✓</span>}
               </button>
               <div style={{ flex:1 }}>
-                <div style={{ fontWeight:600, fontSize:13, color:r.hecho?C.piedra:C.tinta, textDecoration:r.hecho?"line-through":"none" }}>{r.texto}</div>
+                <div style={{ fontWeight:600, fontSize:13, color:r.hecho?"#8B949E":"#E8E8E8", textDecoration:r.hecho?"line-through":"none" }}>{r.texto}</div>
                 <div style={{ fontSize:11, color:"#8B949E", marginTop:2, display:"flex", gap:10 }}>
                   <span>{fmtDate(r.fecha)}</span>
                   <span style={{ background:"#21262D", padding:"1px 6px", borderRadius:3, fontWeight:600 }}>{r.tipo}</span>
@@ -1229,7 +1229,7 @@ export default function App() {
               style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"9px 12px", borderRadius:8, border:"none", cursor:"pointer", marginBottom:2, background:tab===t.id?"#21262D":"transparent", color:tab===t.id?"#E8E8E8":"#8B949E", fontWeight:tab===t.id?700:400, fontSize:13, textAlign:"left", position:"relative" }}>
               <span style={{ fontSize:15 }}>{t.icon}</span>
               <span>{t.label}</span>
-              {t.badge > 0 && <span style={{ position:"absolute", right:10, background:C.rojo, color:"white", borderRadius:10, fontSize:10, fontWeight:700, padding:"1px 6px", minWidth:16, textAlign:"center" }}>{t.badge}</span>}
+              {t.badge > 0 && <span style={{ position:"absolute", right:10, background:"#F85149", color:"white", borderRadius:10, fontSize:10, fontWeight:700, padding:"1px 6px", minWidth:16, textAlign:"center" }}>{t.badge}</span>}
             </button>
           ))}
         </nav>
@@ -1252,7 +1252,7 @@ export default function App() {
           <button onClick={()=>setSidebarOpen(true)}
             style={{ background:"none", border:"none", color:"#E8E8E8", cursor:"pointer", fontSize:20, padding:"2px 6px" }}>☰</button>
           <div style={{ fontFamily:"'Georgia',serif", fontSize:16, fontWeight:700, color:"#C8A96E" }}>PÉRTIGA</div>
-          {pendientes > 0 && <span style={{ background:C.rojo, color:"white", borderRadius:10, fontSize:10, fontWeight:700, padding:"2px 7px", marginLeft:"auto" }}>{pendientes}</span>}
+          {pendientes > 0 && <span style={{ background:"#F85149", color:"white", borderRadius:10, fontSize:10, fontWeight:700, padding:"2px 7px", marginLeft:"auto" }}>{pendientes}</span>}
         </div>
         <div style={{ maxWidth:960, margin:"0 auto", padding:"28px 24px" }}
           className="main-padding">
