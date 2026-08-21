@@ -717,8 +717,8 @@ export function RecursoHumano({ supabase }) {
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
         <div style={{fontFamily:"'Georgia',serif",fontSize:20,fontWeight:700,color:"#E8E8E8"}}>Recurso Humano</div>
         <div style={{display:"flex",gap:8}}>
-          {subtab==="equipo" && <button onClick={()=>{setForm({estado:"Activo",tipo_pago:"Quincenal",fecha_ingreso:today});setModal("trabajador");}} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>+ Trabajador</button>}
-          {subtab==="pagos" && <button onClick={()=>{setForm({fecha:today,tipo:"Quincenal",trabajador_id:trabajadores[0]?.id||""});setModal("pago");}} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>+ Registrar pago</button>}
+          {subtab==="equipo" && <button onClick={()=>{setForm({estado:"Activo",tipo_pago:"Quincenal",fecha_ingreso:today});setModal("trabajador");}} style={{background:"#21262D",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>+ Trabajador</button>}
+          {subtab==="pagos" && <button onClick={()=>{setForm({fecha:today,tipo:"Quincenal",trabajador_id:trabajadores[0]?.id||""});setModal("pago");}} style={{background:"#21262D",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>+ Registrar pago</button>}
         </div>
       </div>
 
@@ -756,7 +756,7 @@ export function RecursoHumano({ supabase }) {
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                   <div style={{flex:1}}>
                     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-                      <div style={{width:36,height:36,borderRadius:"50%",background:"#1A1714",color:"#C8A96E",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>
+                      <div style={{width:36,height:36,borderRadius:"50%",background:"#21262D",color:"#C8A96E",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>
                         {t.nombre.charAt(0)}
                       </div>
                       <div>
@@ -773,7 +773,7 @@ export function RecursoHumano({ supabase }) {
                       </div>
                       <div style={{background:"#21262D",borderRadius:6,padding:"8px 12px"}}>
                         <div style={{fontSize:10,color:"#8B949E",textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>Horas registradas</div>
-                        <div style={{fontWeight:700,color:"#2980B9",fontSize:13}}>{horas}h</div>
+                        <div style={{fontWeight:700,color:"#58A6FF",fontSize:13}}>{horas}h</div>
                         <div style={{fontSize:10,color:"#8B949E"}}>En el sistema</div>
                       </div>
                       <div style={{background:"#21262D",borderRadius:6,padding:"8px 12px"}}>
@@ -809,7 +809,7 @@ export function RecursoHumano({ supabase }) {
                   <div>
                     <div style={{fontWeight:700,fontSize:13,color:"#E8E8E8"}}>{trab?.nombre||"—"}</div>
                     <div style={{fontSize:11,color:"#8B949E"}}>{fmtDate(p.fecha)} · {p.tipo}{p.periodo&&` · ${p.periodo}`}</div>
-                    {p.horas_referencia>0 && <div style={{fontSize:11,color:"#2980B9"}}>{p.horas_referencia}h de referencia</div>}
+                    {p.horas_referencia>0 && <div style={{fontSize:11,color:"#58A6FF"}}>{p.horas_referencia}h de referencia</div>}
                     {p.descripcion && <div style={{fontSize:11,color:"#8B949E",fontStyle:"italic"}}>{p.descripcion}</div>}
                   </div>
                   <div style={{fontWeight:700,color:"#3D5A52",fontSize:15}}>{fmt(p.monto)}</div>
@@ -947,9 +947,9 @@ export function RecursoHumano({ supabase }) {
                 <textarea value={form.notas||""} onChange={e=>setForm({...form,notas:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:60}}/>
               </div>
               <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar trabajador?")){await supabase.from("trabajadores").delete().eq("id",form.id);setTrabajadores(trabajadores.filter(t=>t.id!==form.id));setModal(null);}}} style={{background:"#2D0F0F",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
+                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar trabajador?")){await supabase.from("trabajadores").delete().eq("id",form.id);setTrabajadores(trabajadores.filter(t=>t.id!==form.id));setModal(null);}}} style={{background:"#2D0F0F",color:"#F85149",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
                 <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#E8E8E8",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
-                <button onClick={saveTrabajador} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
+                <button onClick={saveTrabajador} style={{background:"#21262D",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
               </div>
             </div>
           </div>
@@ -1003,9 +1003,9 @@ export function RecursoHumano({ supabase }) {
                 <textarea value={form.descripcion||""} onChange={e=>setForm({...form,descripcion:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:60}}/>
               </div>
               <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar?")){await supabase.from("pagos_trabajador").delete().eq("id",form.id);setPagos(pagos.filter(p=>p.id!==form.id));setModal(null);}}} style={{background:"#2D0F0F",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
+                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar?")){await supabase.from("pagos_trabajador").delete().eq("id",form.id);setPagos(pagos.filter(p=>p.id!==form.id));setModal(null);}}} style={{background:"#2D0F0F",color:"#F85149",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
                 <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#E8E8E8",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
-                <button onClick={savePago} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
+                <button onClick={savePago} style={{background:"#21262D",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
               </div>
             </div>
           </div>
@@ -1095,7 +1095,7 @@ export function Marketing({ supabase, leads, gastos }) {
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
         <div style={{fontFamily:"'Georgia',serif",fontSize:20,fontWeight:700,color:"#E8E8E8"}}>Marketing</div>
-        {subtab==="campanas" && <button onClick={()=>{setForm({estado:"Planificada",canal:"Instagram",tipo:"Orgánico",fecha_inicio:today});setModal("campana");}} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>+ Nueva campaña</button>}
+        {subtab==="campanas" && <button onClick={()=>{setForm({estado:"Planificada",canal:"Instagram",tipo:"Orgánico",fecha_inicio:today});setModal("campana");}} style={{background:"#21262D",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>+ Nueva campaña</button>}
       </div>
 
       {/* KPIs */}
@@ -1182,7 +1182,7 @@ export function Marketing({ supabase, leads, gastos }) {
                     <span style={{fontSize:13,fontWeight:600,color:"#E8E8E8"}}>{c.canal}</span>
                     <div style={{display:"flex",gap:16,fontSize:12,color:"#8B949E"}}>
                       <span>{c.total} leads</span>
-                      <span style={{color:"#27AE60"}}>{c.ganados} ganados ({convRate}%)</span>
+                      <span style={{color:"#3FB950"}}>{c.ganados} ganados ({convRate}%)</span>
                       {c.valor>0 && <span style={{color:"#3D5A52",fontWeight:600}}>{fmt(c.valor)}</span>}
                     </div>
                   </div>
@@ -1196,7 +1196,7 @@ export function Marketing({ supabase, leads, gastos }) {
           </div>
 
           {/* Resumen de conversión */}
-          <div style={{background:"#1A1714",borderRadius:10,padding:"16px 20px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
+          <div style={{background:"#21262D",borderRadius:10,padding:"16px 20px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
             {[
               {l:"Pipeline total",v:fmt(leads.reduce((s,l)=>s+Number(l.monto_estimado||0),0)),c:"#F5F0E8"},
               {l:"Valor ganado",v:fmt(valorGanado),c:"#C8A96E"},
@@ -1225,7 +1225,7 @@ export function Marketing({ supabase, leads, gastos }) {
                   <div style={{fontSize:13,fontWeight:600,color:"#E8E8E8"}}>{g.desc||g.descripcion}</div>
                   <div style={{fontSize:11,color:"#8B949E"}}>{fmtDate(g.fecha)}{g.proyecto&&` · ${g.proyecto}`}</div>
                 </div>
-                <div style={{fontWeight:700,color:"#C0392B",fontSize:14}}>{fmt(g.monto)}</div>
+                <div style={{fontWeight:700,color:"#F85149",fontSize:14}}>{fmt(g.monto)}</div>
               </div>
             ))}
           </div>
@@ -1301,9 +1301,9 @@ export function Marketing({ supabase, leads, gastos }) {
                 <textarea value={form.notas||""} onChange={e=>setForm({...form,notas:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:60}}/>
               </div>
               <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar?")){await supabase.from("campanas_marketing").delete().eq("id",form.id);setCampanas(campanas.filter(c=>c.id!==form.id));setModal(null);}}} style={{background:"#2D0F0F",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
+                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar?")){await supabase.from("campanas_marketing").delete().eq("id",form.id);setCampanas(campanas.filter(c=>c.id!==form.id));setModal(null);}}} style={{background:"#2D0F0F",color:"#F85149",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
                 <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#E8E8E8",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
-                <button onClick={saveCampana} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
+                <button onClick={saveCampana} style={{background:"#21262D",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
               </div>
             </div>
           </div>
