@@ -45,28 +45,28 @@ function Modal({title,onClose,children}){
 const Inp=({label,...p})=>(
   <div style={{marginBottom:14}}>
     {label&&<div style={{fontSize:11,fontWeight:600,color:C.piedra,marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>{label}</div>}
-    <input {...p} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:C.tinta,background:C.blanco,outline:"none",boxSizing:"border-box",...p.style}}/>
+    <input {...p} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:C.tinta,background:C.blanco,outline:"none",boxSizing:"border-box",...p.style}}/>
   </div>
 );
 const Sel=({label,children,...p})=>(
   <div style={{marginBottom:14}}>
     {label&&<div style={{fontSize:11,fontWeight:600,color:C.piedra,marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>{label}</div>}
-    <select {...p} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:C.tinta,background:C.blanco,outline:"none",boxSizing:"border-box"}}>{children}</select>
+    <select {...p} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:C.tinta,background:C.blanco,outline:"none",boxSizing:"border-box"}}>{children}</select>
   </div>
 );
 const Txt=({label,...p})=>(
   <div style={{marginBottom:14}}>
     {label&&<div style={{fontSize:11,fontWeight:600,color:C.piedra,marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>{label}</div>}
-    <textarea {...p} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:C.tinta,background:C.blanco,outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:70}}/>
+    <textarea {...p} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:C.tinta,background:C.blanco,outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:70}}/>
   </div>
 );
 const Btn=({children,variant="primary",...p})=>{
   const styles={
     primary:{background:C.tinta,color:C.dorado,border:"none"},
     ghost:{background:"transparent",color:C.tinta,border:"1.5px solid #D0C9C0"},
-    danger:{background:"#FDECEA",color:C.rojo,border:"none"},
+    danger:{background:"#2D0F0F",color:C.rojo,border:"none"},
     accent:{background:C.dorado,color:C.tinta,border:"none"},
-    success:{background:"#EAFAF1",color:C.verde,border:"none"},
+    success:{background:"#0D2E1A",color:C.verde,border:"none"},
   };
   return <button {...p} style={{...styles[variant],borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer",...p.style}}>{children}</button>;
 };
@@ -166,7 +166,7 @@ export function LeadTracker({ leads, setLeads, supabase }) {
           {activos.map(estado => {
             const group = leads.filter(l => l.estado === estado);
             return (
-              <div key={estado} style={{background:"#F5F0E8",borderRadius:10,padding:12}}>
+              <div key={estado} style={{background:"#21262D",borderRadius:10,padding:12}}>
                 <div style={{fontSize:11,fontWeight:700,color:C.piedra,textTransform:"uppercase",letterSpacing:0.4,marginBottom:8}}>
                   {estado} <span style={{color:C.dorado}}>({group.length})</span>
                 </div>
@@ -361,8 +361,8 @@ export function Taller({ supabase, projects }) {
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
         <div style={{fontFamily:"'Georgia',serif",fontSize:20,fontWeight:700,color:C.tinta}}>Taller</div>
         <div style={{display:"flex",gap:8}}>
-          {stockBajo.length>0 && <span style={{background:"#FEF9EC",color:"#B8860B",borderRadius:6,padding:"4px 10px",fontSize:11,fontWeight:600}}>⚠ {stockBajo.length} items bajo mínimo</span>}
-          {mantVencidos.length>0 && <span style={{background:"#FDECEA",color:C.rojo,borderRadius:6,padding:"4px 10px",fontSize:11,fontWeight:600}}>🔧 {mantVencidos.length} mantenimientos urgentes</span>}
+          {stockBajo.length>0 && <span style={{background:"#2D1F00",color:"#B8860B",borderRadius:6,padding:"4px 10px",fontSize:11,fontWeight:600}}>⚠ {stockBajo.length} items bajo mínimo</span>}
+          {mantVencidos.length>0 && <span style={{background:"#2D0F0F",color:C.rojo,borderRadius:6,padding:"4px 10px",fontSize:11,fontWeight:600}}>🔧 {mantVencidos.length} mantenimientos urgentes</span>}
         </div>
       </div>
 
@@ -381,7 +381,7 @@ export function Taller({ supabase, projects }) {
       )}
 
       {/* Subtabs */}
-      <div style={{display:"flex",gap:6,marginBottom:16,background:"#F0EAE0",borderRadius:8,padding:4,flexWrap:"wrap"}}>
+      <div style={{display:"flex",gap:6,marginBottom:16,background:"#21262D",borderRadius:8,padding:4,flexWrap:"wrap"}}>
         <SubTab id="produccion" label="Producción" icon="⚙" />
         <SubTab id="tiempos" label="Tiempos" icon="⏱" />
         <SubTab id="inventario" label="Inventario" icon="📦" />
@@ -399,7 +399,7 @@ export function Taller({ supabase, projects }) {
               const group = tareas.filter(t=>t.estado===estado);
               const colors = {"En cola":C.piedra,"En proceso":C.azul,"Control de calidad":"#7D3C98","Listo":C.verde};
               return (
-                <div key={estado} style={{background:"#F5F0E8",borderRadius:10,padding:12}}>
+                <div key={estado} style={{background:"#21262D",borderRadius:10,padding:12}}>
                   <div style={{fontSize:11,fontWeight:700,color:colors[estado],textTransform:"uppercase",letterSpacing:0.4,marginBottom:8,display:"flex",justifyContent:"space-between"}}>
                     <span>{estado}</span><span>({group.length})</span>
                   </div>
@@ -415,11 +415,11 @@ export function Taller({ supabase, projects }) {
                       )}
                       <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                         {t.estado!=="Listo" && !timerActivo && (
-                          <button onClick={()=>iniciarTimer(t)} style={{background:"#EAF4F0",color:C.musgo,border:"none",borderRadius:4,padding:"3px 8px",fontSize:10,fontWeight:600,cursor:"pointer"}}>▶ Timer</button>
+                          <button onClick={()=>iniciarTimer(t)} style={{background:"#0D2E1A",color:C.musgo,border:"none",borderRadius:4,padding:"3px 8px",fontSize:10,fontWeight:600,cursor:"pointer"}}>▶ Timer</button>
                         )}
-                        <button onClick={()=>{ setForm({...t}); setModal("tarea"); }} style={{background:"#F0EAE0",color:C.piedra,border:"none",borderRadius:4,padding:"3px 8px",fontSize:10,cursor:"pointer"}}>✏ Editar</button>
+                        <button onClick={()=>{ setForm({...t}); setModal("tarea"); }} style={{background:"#21262D",color:C.piedra,border:"none",borderRadius:4,padding:"3px 8px",fontSize:10,cursor:"pointer"}}>✏ Editar</button>
                         {t.estado!=="Listo" && (
-                          <button onClick={async()=>{ const next = ETAPAS_PROD[ETAPAS_PROD.indexOf(t.estado)+1]; if(next){ await supabase.from("tareas").update({estado:next}).eq("id",t.id); setTareas(tareas.map(x=>x.id===t.id?{...x,estado:next}:x)); } }} style={{background:"#EAF2FB",color:C.azul,border:"none",borderRadius:4,padding:"3px 8px",fontSize:10,fontWeight:600,cursor:"pointer"}}>→ Avanzar</button>
+                          <button onClick={async()=>{ const next = ETAPAS_PROD[ETAPAS_PROD.indexOf(t.estado)+1]; if(next){ await supabase.from("tareas").update({estado:next}).eq("id",t.id); setTareas(tareas.map(x=>x.id===t.id?{...x,estado:next}:x)); } }} style={{background:"#0C2044",color:C.azul,border:"none",borderRadius:4,padding:"3px 8px",fontSize:10,fontWeight:600,cursor:"pointer"}}>→ Avanzar</button>
                         )}
                       </div>
                     </div>
@@ -471,7 +471,7 @@ export function Taller({ supabase, projects }) {
             <Btn onClick={()=>{ setForm({nombre:"",categoria:"Madera",cantidad:"",unidad:"unidades",minimo:"",ubicacion:"",notas:""}); setModal("inventario"); }}>+ Agregar ítem</Btn>
           </div>
           {stockBajo.length>0 && (
-            <div style={{background:"#FEF9EC",border:"1px solid #F0D080",borderRadius:8,padding:"10px 16px",marginBottom:12}}>
+            <div style={{background:"#2D1F00",border:"1px solid #F0D080",borderRadius:8,padding:"10px 16px",marginBottom:12}}>
               <div style={{fontWeight:700,fontSize:12,color:"#B8860B",marginBottom:4}}>⚠ Stock bajo mínimo</div>
               {stockBajo.map(i=><div key={i.id} style={{fontSize:12,color:C.tinta}}>{i.nombre} — {i.cantidad} {i.unidad} (mínimo: {i.minimo})</div>)}
             </div>
@@ -715,7 +715,7 @@ export function RecursoHumano({ supabase }) {
   return (
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-        <div style={{fontFamily:"'Georgia',serif",fontSize:20,fontWeight:700,color:"#1A1714"}}>Recurso Humano</div>
+        <div style={{fontFamily:"'Georgia',serif",fontSize:20,fontWeight:700,color:"#E8E8E8"}}>Recurso Humano</div>
         <div style={{display:"flex",gap:8}}>
           {subtab==="equipo" && <button onClick={()=>{setForm({estado:"Activo",tipo_pago:"Quincenal",fecha_ingreso:today});setModal("trabajador");}} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>+ Trabajador</button>}
           {subtab==="pagos" && <button onClick={()=>{setForm({fecha:today,tipo:"Quincenal",trabajador_id:trabajadores[0]?.id||""});setModal("pago");}} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>+ Registrar pago</button>}
@@ -730,14 +730,14 @@ export function RecursoHumano({ supabase }) {
           {l:"Pagado este mes",v:fmt(totalPagadoMes),c:"#C8A96E"},
           {l:"Horas registradas",v:tiempos.reduce((s,t)=>s+Number(t.minutos),0)/60|0+"h total",c:"#2980B9"},
         ].map(k=>(
-          <div key={k.l} style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:"12px 14px"}}>
-            <div style={{fontSize:10,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.4,fontWeight:600,marginBottom:3}}>{k.l}</div>
+          <div key={k.l} style={{background:"#161B22",border:"1px solid #21262D",borderRadius:10,padding:"12px 14px"}}>
+            <div style={{fontSize:10,color:"#8B949E",textTransform:"uppercase",letterSpacing:0.4,fontWeight:600,marginBottom:3}}>{k.l}</div>
             <div style={{fontFamily:"'Georgia',serif",fontSize:18,fontWeight:700,color:k.c}}>{k.v}</div>
           </div>
         ))}
       </div>
 
-      <div style={{display:"flex",gap:6,marginBottom:16,background:"#F0EAE0",borderRadius:8,padding:4}}>
+      <div style={{display:"flex",gap:6,marginBottom:16,background:"#21262D",borderRadius:8,padding:4}}>
         <SubTab id="equipo" label="Equipo" icon="👤"/>
         <SubTab id="pagos" label="Pagos" icon="₡"/>
         <SubTab id="horas" label="Horas" icon="⏱"/>
@@ -746,13 +746,13 @@ export function RecursoHumano({ supabase }) {
       {/* EQUIPO */}
       {subtab==="equipo" && (
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
-          {trabajadores.length===0 && <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:32,textAlign:"center",color:"#8A8278",fontSize:13}}>No hay trabajadores registrados</div>}
+          {trabajadores.length===0 && <div style={{background:"#161B22",border:"1px solid #21262D",borderRadius:10,padding:32,textAlign:"center",color:"#8B949E",fontSize:13}}>No hay trabajadores registrados</div>}
           {trabajadores.map(t => {
             const horas = horasPorOperario(t.nombre);
             const pagadoTotal = totalPagado(t.id);
             const estadoColor = t.estado==="Activo"?"#27AE60":t.estado==="Período de prueba"?"#E67E22":"#8A8278";
             return (
-              <div key={t.id} style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:"16px 18px"}}>
+              <div key={t.id} style={{background:"#161B22",border:"1px solid #21262D",borderRadius:10,padding:"16px 18px"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                   <div style={{flex:1}}>
                     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
@@ -760,33 +760,33 @@ export function RecursoHumano({ supabase }) {
                         {t.nombre.charAt(0)}
                       </div>
                       <div>
-                        <div style={{fontWeight:700,fontSize:14,color:"#1A1714"}}>{t.nombre}</div>
-                        <div style={{fontSize:12,color:"#8A8278"}}>{t.rol}</div>
+                        <div style={{fontWeight:700,fontSize:14,color:"#E8E8E8"}}>{t.nombre}</div>
+                        <div style={{fontSize:12,color:"#8B949E"}}>{t.rol}</div>
                       </div>
                       <span style={{background:t.estado==="Activo"?"#EAFAF1":t.estado==="Período de prueba"?"#FEF0E6":"#F5F0E8",color:estadoColor,borderRadius:4,padding:"2px 8px",fontSize:11,fontWeight:600}}>{t.estado}</span>
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginTop:10}}>
-                      <div style={{background:"#F5F0E8",borderRadius:6,padding:"8px 12px"}}>
-                        <div style={{fontSize:10,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>Salario base</div>
-                        <div style={{fontWeight:700,color:"#1A1714",fontSize:13}}>{fmt(t.salario_base)}</div>
-                        <div style={{fontSize:10,color:"#8A8278"}}>{t.tipo_pago}</div>
+                      <div style={{background:"#21262D",borderRadius:6,padding:"8px 12px"}}>
+                        <div style={{fontSize:10,color:"#8B949E",textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>Salario base</div>
+                        <div style={{fontWeight:700,color:"#E8E8E8",fontSize:13}}>{fmt(t.salario_base)}</div>
+                        <div style={{fontSize:10,color:"#8B949E"}}>{t.tipo_pago}</div>
                       </div>
-                      <div style={{background:"#F5F0E8",borderRadius:6,padding:"8px 12px"}}>
-                        <div style={{fontSize:10,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>Horas registradas</div>
+                      <div style={{background:"#21262D",borderRadius:6,padding:"8px 12px"}}>
+                        <div style={{fontSize:10,color:"#8B949E",textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>Horas registradas</div>
                         <div style={{fontWeight:700,color:"#2980B9",fontSize:13}}>{horas}h</div>
-                        <div style={{fontSize:10,color:"#8A8278"}}>En el sistema</div>
+                        <div style={{fontSize:10,color:"#8B949E"}}>En el sistema</div>
                       </div>
-                      <div style={{background:"#F5F0E8",borderRadius:6,padding:"8px 12px"}}>
-                        <div style={{fontSize:10,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>Total pagado</div>
+                      <div style={{background:"#21262D",borderRadius:6,padding:"8px 12px"}}>
+                        <div style={{fontSize:10,color:"#8B949E",textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>Total pagado</div>
                         <div style={{fontWeight:700,color:"#3D5A52",fontSize:13}}>{fmt(pagadoTotal)}</div>
-                        <div style={{fontSize:10,color:"#8A8278"}}>{pagosTrabajador(t.id).length} pagos</div>
+                        <div style={{fontSize:10,color:"#8B949E"}}>{pagosTrabajador(t.id).length} pagos</div>
                       </div>
                     </div>
-                    {t.telefono && <div style={{fontSize:11,color:"#8A8278",marginTop:8}}>📞 {t.telefono}{t.email && ` · ✉ ${t.email}`}</div>}
-                    {t.fecha_ingreso && <div style={{fontSize:11,color:"#8A8278",marginTop:2}}>Ingreso: {fmtDate(t.fecha_ingreso)}{t.ccss && ` · CCSS: ${t.ccss}`}</div>}
-                    {t.notas && <div style={{fontSize:11,color:"#8A8278",marginTop:4,fontStyle:"italic"}}>{t.notas}</div>}
+                    {t.telefono && <div style={{fontSize:11,color:"#8B949E",marginTop:8}}>📞 {t.telefono}{t.email && ` · ✉ ${t.email}`}</div>}
+                    {t.fecha_ingreso && <div style={{fontSize:11,color:"#8B949E",marginTop:2}}>Ingreso: {fmtDate(t.fecha_ingreso)}{t.ccss && ` · CCSS: ${t.ccss}`}</div>}
+                    {t.notas && <div style={{fontSize:11,color:"#8B949E",marginTop:4,fontStyle:"italic"}}>{t.notas}</div>}
                   </div>
-                  <button onClick={()=>{setForm({...t});setModal("trabajador");}} style={{background:"none",border:"none",cursor:"pointer",color:"#8A8278",fontSize:14,marginLeft:12}}>✏</button>
+                  <button onClick={()=>{setForm({...t});setModal("trabajador");}} style={{background:"none",border:"none",cursor:"pointer",color:"#8B949E",fontSize:14,marginLeft:12}}>✏</button>
                 </div>
               </div>
             );
@@ -797,20 +797,20 @@ export function RecursoHumano({ supabase }) {
       {/* PAGOS */}
       {subtab==="pagos" && (
         <div>
-          <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,overflow:"hidden"}}>
-            {pagos.length===0 && <div style={{padding:32,textAlign:"center",color:"#8A8278",fontSize:13}}>Sin pagos registrados</div>}
+          <div style={{background:"#161B22",border:"1px solid #21262D",borderRadius:10,overflow:"hidden"}}>
+            {pagos.length===0 && <div style={{padding:32,textAlign:"center",color:"#8B949E",fontSize:13}}>Sin pagos registrados</div>}
             {[...pagos].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).map((p,i)=>{
               const trab = trabajadores.find(t=>t.id===p.trabajador_id);
               return (
                 <div key={p.id} onClick={()=>{setForm({...p});setModal("pago");}}
                   style={{padding:"12px 18px",borderBottom:i<pagos.length-1?"1px solid #F5F0E8":"none",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}
-                  onMouseEnter={e=>e.currentTarget.style.background="#F5F0E8"}
+                  onMouseEnter={e=>e.currentTarget.style.background="#21262D"}
                   onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
                   <div>
-                    <div style={{fontWeight:700,fontSize:13,color:"#1A1714"}}>{trab?.nombre||"—"}</div>
-                    <div style={{fontSize:11,color:"#8A8278"}}>{fmtDate(p.fecha)} · {p.tipo}{p.periodo&&` · ${p.periodo}`}</div>
+                    <div style={{fontWeight:700,fontSize:13,color:"#E8E8E8"}}>{trab?.nombre||"—"}</div>
+                    <div style={{fontSize:11,color:"#8B949E"}}>{fmtDate(p.fecha)} · {p.tipo}{p.periodo&&` · ${p.periodo}`}</div>
                     {p.horas_referencia>0 && <div style={{fontSize:11,color:"#2980B9"}}>{p.horas_referencia}h de referencia</div>}
-                    {p.descripcion && <div style={{fontSize:11,color:"#8A8278",fontStyle:"italic"}}>{p.descripcion}</div>}
+                    {p.descripcion && <div style={{fontSize:11,color:"#8B949E",fontStyle:"italic"}}>{p.descripcion}</div>}
                   </div>
                   <div style={{fontWeight:700,color:"#3D5A52",fontSize:15}}>{fmt(p.monto)}</div>
                 </div>
@@ -819,17 +819,17 @@ export function RecursoHumano({ supabase }) {
           </div>
 
           {/* Resumen por trabajador */}
-          <div style={{marginTop:16,background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:16}}>
-            <div style={{fontWeight:700,fontSize:13,color:"#1A1714",marginBottom:12}}>Resumen por trabajador</div>
+          <div style={{marginTop:16,background:"#161B22",border:"1px solid #21262D",borderRadius:10,padding:16}}>
+            <div style={{fontWeight:700,fontSize:13,color:"#E8E8E8",marginBottom:12}}>Resumen por trabajador</div>
             {trabajadores.map(t=>(
-              <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #F5F0E8"}}>
+              <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #21262D"}}>
                 <div>
-                  <div style={{fontSize:13,fontWeight:600,color:"#1A1714"}}>{t.nombre}</div>
-                  <div style={{fontSize:11,color:"#8A8278"}}>{pagosTrabajador(t.id).length} pagos registrados</div>
+                  <div style={{fontSize:13,fontWeight:600,color:"#E8E8E8"}}>{t.nombre}</div>
+                  <div style={{fontSize:11,color:"#8B949E"}}>{pagosTrabajador(t.id).length} pagos registrados</div>
                 </div>
                 <div style={{textAlign:"right"}}>
                   <div style={{fontWeight:700,color:"#3D5A52",fontSize:14}}>{fmt(totalPagado(t.id))}</div>
-                  <div style={{fontSize:11,color:"#8A8278"}}>Base: {fmt(t.salario_base)}/{t.tipo_pago}</div>
+                  <div style={{fontSize:11,color:"#8B949E"}}>Base: {fmt(t.salario_base)}/{t.tipo_pago}</div>
                 </div>
               </div>
             ))}
@@ -840,8 +840,8 @@ export function RecursoHumano({ supabase }) {
       {/* HORAS */}
       {subtab==="horas" && (
         <div>
-          <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:16,marginBottom:12}}>
-            <div style={{fontWeight:700,fontSize:13,color:"#1A1714",marginBottom:12}}>Horas por trabajador (acumulado)</div>
+          <div style={{background:"#161B22",border:"1px solid #21262D",borderRadius:10,padding:16,marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:13,color:"#E8E8E8",marginBottom:12}}>Horas por trabajador (acumulado)</div>
             {trabajadores.map(t=>{
               const horas = horasPorOperario(t.nombre);
               const registros = tiempos.filter(x=>x.operario===t.nombre);
@@ -849,10 +849,10 @@ export function RecursoHumano({ supabase }) {
               return (
                 <div key={t.id} style={{marginBottom:14}}>
                   <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                    <span style={{fontSize:13,fontWeight:600,color:"#1A1714"}}>{t.nombre}</span>
-                    <span style={{fontSize:13,color:"#8A8278"}}>{horas}h · {registros.length} registros</span>
+                    <span style={{fontSize:13,fontWeight:600,color:"#E8E8E8"}}>{t.nombre}</span>
+                    <span style={{fontSize:13,color:"#8B949E"}}>{horas}h · {registros.length} registros</span>
                   </div>
-                  <div style={{background:"#E8E2D8",borderRadius:4,height:8}}>
+                  <div style={{background:"#30363D",borderRadius:4,height:8}}>
                     <div style={{background:"#C8A96E",width:`${Math.round(horas/maxH*100)}%`,height:"100%",borderRadius:4}}/>
                   </div>
                 </div>
@@ -861,13 +861,13 @@ export function RecursoHumano({ supabase }) {
           </div>
 
           {/* Detalle de registros */}
-          <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,overflow:"hidden"}}>
-            <div style={{padding:"12px 18px",borderBottom:"1px solid #F5F0E8",fontWeight:700,fontSize:13,color:"#1A1714"}}>Últimos registros de tiempo</div>
+          <div style={{background:"#161B22",border:"1px solid #21262D",borderRadius:10,overflow:"hidden"}}>
+            <div style={{padding:"12px 18px",borderBottom:"1px solid #21262D",fontWeight:700,fontSize:13,color:"#E8E8E8"}}>Últimos registros de tiempo</div>
             {[...tiempos].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).slice(0,20).map((t,i)=>(
               <div key={t.id} style={{padding:"10px 18px",borderBottom:i<19?"1px solid #F5F0E8":"none",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div>
-                  <div style={{fontSize:13,fontWeight:600,color:"#1A1714"}}>{t.descripcion}</div>
-                  <div style={{fontSize:11,color:"#8A8278"}}>{t.operario} · {fmtDate(t.fecha)}{t.proyecto&&` · ${t.proyecto}`}</div>
+                  <div style={{fontSize:13,fontWeight:600,color:"#E8E8E8"}}>{t.descripcion}</div>
+                  <div style={{fontSize:11,color:"#8B949E"}}>{t.operario} · {fmtDate(t.fecha)}{t.proyecto&&` · ${t.proyecto}`}</div>
                 </div>
                 <div style={{fontFamily:"'Georgia',serif",fontSize:15,fontWeight:700,color:"#3D5A52"}}>{t.minutos}min</div>
               </div>
@@ -879,10 +879,10 @@ export function RecursoHumano({ supabase }) {
       {/* Modal trabajador */}
       {modal==="trabajador" && (
         <div style={{position:"fixed",inset:0,background:"rgba(26,23,20,0.55)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
-          <div style={{background:"#FDFCFA",borderRadius:12,width:"100%",maxWidth:540,maxHeight:"88vh",overflow:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.25)"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 24px 14px",borderBottom:"1px solid #F5F0E8"}}>
-              <span style={{fontFamily:"'Georgia',serif",fontSize:17,fontWeight:600,color:"#1A1714"}}>{form.id?"Editar trabajador":"Nuevo trabajador"}</span>
-              <button onClick={()=>setModal(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#8A8278"}}>×</button>
+          <div style={{background:"#161B22",borderRadius:12,width:"100%",maxWidth:540,maxHeight:"88vh",overflow:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.25)"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 24px 14px",borderBottom:"1px solid #21262D"}}>
+              <span style={{fontFamily:"'Georgia',serif",fontSize:17,fontWeight:600,color:"#E8E8E8"}}>{form.id?"Editar trabajador":"Nuevo trabajador"}</span>
+              <button onClick={()=>setModal(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#8B949E"}}>×</button>
             </div>
             <div style={{padding:"20px 24px 24px"}}>
               {[
@@ -892,63 +892,63 @@ export function RecursoHumano({ supabase }) {
                 {l:"Email",k:"email",ph:"correo@ejemplo.com"},
               ].map(f=>(
                 <div key={f.k} style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>{f.l}</div>
-                  <input value={form[f.k]||""} onChange={e=>setForm({...form,[f.k]:e.target.value})} placeholder={f.ph} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>{f.l}</div>
+                  <input value={form[f.k]||""} onChange={e=>setForm({...form,[f.k]:e.target.value})} placeholder={f.ph} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
               ))}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Rol</div>
-                  <select value={form.rol||"Operario"} onChange={e=>setForm({...form,rol:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Rol</div>
+                  <select value={form.rol||"Operario"} onChange={e=>setForm({...form,rol:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none"}}>
                     {["Operario","Ayudante","Laqueador","Instalador","Administrativo","Fundador"].map(r=><option key={r}>{r}</option>)}
                   </select>
                 </div>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Estado</div>
-                  <select value={form.estado||"Activo"} onChange={e=>setForm({...form,estado:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Estado</div>
+                  <select value={form.estado||"Activo"} onChange={e=>setForm({...form,estado:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none"}}>
                     {ESTADOS_TRABAJADOR.map(s=><option key={s}>{s}</option>)}
                   </select>
                 </div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Salario base (₡)</div>
-                  <input type="number" value={form.salario_base||""} onChange={e=>setForm({...form,salario_base:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Salario base (₡)</div>
+                  <input type="number" value={form.salario_base||""} onChange={e=>setForm({...form,salario_base:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Tipo de pago</div>
-                  <select value={form.tipo_pago||"Quincenal"} onChange={e=>setForm({...form,tipo_pago:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Tipo de pago</div>
+                  <select value={form.tipo_pago||"Quincenal"} onChange={e=>setForm({...form,tipo_pago:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none"}}>
                     {["Semanal","Quincenal","Mensual","Por hora","Por proyecto"].map(t=><option key={t}>{t}</option>)}
                   </select>
                 </div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Fecha ingreso</div>
-                  <input type="date" value={form.fecha_ingreso||today} onChange={e=>setForm({...form,fecha_ingreso:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Fecha ingreso</div>
+                  <input type="date" value={form.fecha_ingreso||today} onChange={e=>setForm({...form,fecha_ingreso:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>N° CCSS</div>
-                  <input value={form.ccss||""} onChange={e=>setForm({...form,ccss:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>N° CCSS</div>
+                  <input value={form.ccss||""} onChange={e=>setForm({...form,ccss:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Banco</div>
-                  <input value={form.banco||""} onChange={e=>setForm({...form,banco:e.target.value})} placeholder="Banco Nacional, BCR..." style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Banco</div>
+                  <input value={form.banco||""} onChange={e=>setForm({...form,banco:e.target.value})} placeholder="Banco Nacional, BCR..." style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>N° Cuenta</div>
-                  <input value={form.cuenta||""} onChange={e=>setForm({...form,cuenta:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>N° Cuenta</div>
+                  <input value={form.cuenta||""} onChange={e=>setForm({...form,cuenta:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
               </div>
               <div style={{marginBottom:14}}>
-                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Notas</div>
-                <textarea value={form.notas||""} onChange={e=>setForm({...form,notas:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:60}}/>
+                <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Notas</div>
+                <textarea value={form.notas||""} onChange={e=>setForm({...form,notas:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:60}}/>
               </div>
               <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar trabajador?")){await supabase.from("trabajadores").delete().eq("id",form.id);setTrabajadores(trabajadores.filter(t=>t.id!==form.id));setModal(null);}}} style={{background:"#FDECEA",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
-                <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#1A1714",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
+                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar trabajador?")){await supabase.from("trabajadores").delete().eq("id",form.id);setTrabajadores(trabajadores.filter(t=>t.id!==form.id));setModal(null);}}} style={{background:"#2D0F0F",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
+                <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#E8E8E8",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
                 <button onClick={saveTrabajador} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
               </div>
             </div>
@@ -959,52 +959,52 @@ export function RecursoHumano({ supabase }) {
       {/* Modal pago */}
       {modal==="pago" && (
         <div style={{position:"fixed",inset:0,background:"rgba(26,23,20,0.55)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
-          <div style={{background:"#FDFCFA",borderRadius:12,width:"100%",maxWidth:480,maxHeight:"88vh",overflow:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.25)"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 24px 14px",borderBottom:"1px solid #F5F0E8"}}>
-              <span style={{fontFamily:"'Georgia',serif",fontSize:17,fontWeight:600,color:"#1A1714"}}>{form.id?"Editar pago":"Registrar pago"}</span>
-              <button onClick={()=>setModal(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#8A8278"}}>×</button>
+          <div style={{background:"#161B22",borderRadius:12,width:"100%",maxWidth:480,maxHeight:"88vh",overflow:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.25)"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 24px 14px",borderBottom:"1px solid #21262D"}}>
+              <span style={{fontFamily:"'Georgia',serif",fontSize:17,fontWeight:600,color:"#E8E8E8"}}>{form.id?"Editar pago":"Registrar pago"}</span>
+              <button onClick={()=>setModal(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#8B949E"}}>×</button>
             </div>
             <div style={{padding:"20px 24px 24px"}}>
               <div style={{marginBottom:14}}>
-                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Trabajador</div>
-                <select value={form.trabajador_id||""} onChange={e=>setForm({...form,trabajador_id:Number(e.target.value)})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
+                <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Trabajador</div>
+                <select value={form.trabajador_id||""} onChange={e=>setForm({...form,trabajador_id:Number(e.target.value)})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none"}}>
                   <option value="">Seleccionar...</option>
                   {trabajadores.map(t=><option key={t.id} value={t.id}>{t.nombre}</option>)}
                 </select>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Monto (₡)</div>
-                  <input type="number" value={form.monto||""} onChange={e=>setForm({...form,monto:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Monto (₡)</div>
+                  <input type="number" value={form.monto||""} onChange={e=>setForm({...form,monto:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Fecha</div>
-                  <input type="date" value={form.fecha||today} onChange={e=>setForm({...form,fecha:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Fecha</div>
+                  <input type="date" value={form.fecha||today} onChange={e=>setForm({...form,fecha:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Tipo de pago</div>
-                  <select value={form.tipo||"Quincenal"} onChange={e=>setForm({...form,tipo:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Tipo de pago</div>
+                  <select value={form.tipo||"Quincenal"} onChange={e=>setForm({...form,tipo:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none"}}>
                     {["Semanal","Quincenal","Mensual","Por hora","Por proyecto","Adelanto","Liquidación"].map(t=><option key={t}>{t}</option>)}
                   </select>
                 </div>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Horas de referencia</div>
-                  <input type="number" value={form.horas_referencia||""} onChange={e=>setForm({...form,horas_referencia:e.target.value})} placeholder="0" style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Horas de referencia</div>
+                  <input type="number" value={form.horas_referencia||""} onChange={e=>setForm({...form,horas_referencia:e.target.value})} placeholder="0" style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
               </div>
               <div style={{marginBottom:14}}>
-                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Período</div>
-                <input value={form.periodo||""} onChange={e=>setForm({...form,periodo:e.target.value})} placeholder="Ej: 1-15 agosto 2026" style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Período</div>
+                <input value={form.periodo||""} onChange={e=>setForm({...form,periodo:e.target.value})} placeholder="Ej: 1-15 agosto 2026" style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
               </div>
               <div style={{marginBottom:14}}>
-                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Descripción</div>
-                <textarea value={form.descripcion||""} onChange={e=>setForm({...form,descripcion:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:60}}/>
+                <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Descripción</div>
+                <textarea value={form.descripcion||""} onChange={e=>setForm({...form,descripcion:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:60}}/>
               </div>
               <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar?")){await supabase.from("pagos_trabajador").delete().eq("id",form.id);setPagos(pagos.filter(p=>p.id!==form.id));setModal(null);}}} style={{background:"#FDECEA",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
-                <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#1A1714",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
+                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar?")){await supabase.from("pagos_trabajador").delete().eq("id",form.id);setPagos(pagos.filter(p=>p.id!==form.id));setModal(null);}}} style={{background:"#2D0F0F",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
+                <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#E8E8E8",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
                 <button onClick={savePago} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
               </div>
             </div>
@@ -1094,7 +1094,7 @@ export function Marketing({ supabase, leads, gastos }) {
   return (
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-        <div style={{fontFamily:"'Georgia',serif",fontSize:20,fontWeight:700,color:"#1A1714"}}>Marketing</div>
+        <div style={{fontFamily:"'Georgia',serif",fontSize:20,fontWeight:700,color:"#E8E8E8"}}>Marketing</div>
         {subtab==="campanas" && <button onClick={()=>{setForm({estado:"Planificada",canal:"Instagram",tipo:"Orgánico",fecha_inicio:today});setModal("campana");}} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>+ Nueva campaña</button>}
       </div>
 
@@ -1106,14 +1106,14 @@ export function Marketing({ supabase, leads, gastos }) {
           {l:"Tasa conversión",v:tasaConversion+"%",c:"#3D5A52"},
           {l:"Costo por lead",v:costoPorLead>0?fmt(costoPorLead):"—",c:"#C8A96E"},
         ].map(k=>(
-          <div key={k.l} style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:"12px 14px"}}>
-            <div style={{fontSize:10,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.4,fontWeight:600,marginBottom:3}}>{k.l}</div>
+          <div key={k.l} style={{background:"#161B22",border:"1px solid #21262D",borderRadius:10,padding:"12px 14px"}}>
+            <div style={{fontSize:10,color:"#8B949E",textTransform:"uppercase",letterSpacing:0.4,fontWeight:600,marginBottom:3}}>{k.l}</div>
             <div style={{fontFamily:"'Georgia',serif",fontSize:18,fontWeight:700,color:k.c}}>{k.v}</div>
           </div>
         ))}
       </div>
 
-      <div style={{display:"flex",gap:6,marginBottom:16,background:"#F0EAE0",borderRadius:8,padding:4}}>
+      <div style={{display:"flex",gap:6,marginBottom:16,background:"#21262D",borderRadius:8,padding:4}}>
         <SubTab id="campanas" label="Campañas" icon="📣"/>
         <SubTab id="canales" label="Canales" icon="📊"/>
         <SubTab id="gastos" label="Gastos" icon="₡"/>
@@ -1122,27 +1122,27 @@ export function Marketing({ supabase, leads, gastos }) {
       {/* CAMPAÑAS */}
       {subtab==="campanas" && (
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {campanas.length===0 && <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:32,textAlign:"center",color:"#8A8278",fontSize:13}}>No hay campañas registradas</div>}
+          {campanas.length===0 && <div style={{background:"#161B22",border:"1px solid #21262D",borderRadius:10,padding:32,textAlign:"center",color:"#8B949E",fontSize:13}}>No hay campañas registradas</div>}
           {campanas.map(c => {
             const roi = c.gasto_real > 0 ? Math.round((c.ventas_atribuidas - c.gasto_real) / c.gasto_real * 100) : null;
             const sc = estadoColor[c.estado] || {bg:"#F5F0E8",text:"#8A8278"};
             return (
-              <div key={c.id} style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:"14px 18px",cursor:"pointer"}}
+              <div key={c.id} style={{background:"#161B22",border:"1px solid #21262D",borderRadius:10,padding:"14px 18px",cursor:"pointer"}}
                 onClick={()=>{setForm({...c});setModal("campana");}}
                 onMouseEnter={e=>e.currentTarget.style.borderColor="#C8A96E"}
                 onMouseLeave={e=>e.currentTarget.style.borderColor="#E8E2D8"}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
                   <div>
                     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
-                      <span style={{fontWeight:700,fontSize:14,color:"#1A1714"}}>{c.nombre}</span>
+                      <span style={{fontWeight:700,fontSize:14,color:"#E8E8E8"}}>{c.nombre}</span>
                       <span style={{background:sc.bg,color:sc.text,borderRadius:4,padding:"2px 8px",fontSize:11,fontWeight:600}}>{c.estado}</span>
                     </div>
-                    <div style={{fontSize:12,color:"#8A8278"}}>{c.canal} · {c.tipo}{c.fecha_inicio&&` · ${fmtDate(c.fecha_inicio)}`}{c.fecha_fin&&` → ${fmtDate(c.fecha_fin)}`}</div>
-                    {c.objetivo && <div style={{fontSize:12,color:"#1A1714",marginTop:4,fontStyle:"italic"}}>{c.objetivo}</div>}
+                    <div style={{fontSize:12,color:"#8B949E"}}>{c.canal} · {c.tipo}{c.fecha_inicio&&` · ${fmtDate(c.fecha_inicio)}`}{c.fecha_fin&&` → ${fmtDate(c.fecha_fin)}`}</div>
+                    {c.objetivo && <div style={{fontSize:12,color:"#E8E8E8",marginTop:4,fontStyle:"italic"}}>{c.objetivo}</div>}
                   </div>
                   {roi !== null && (
                     <div style={{textAlign:"right"}}>
-                      <div style={{fontSize:10,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.4}}>ROI</div>
+                      <div style={{fontSize:10,color:"#8B949E",textTransform:"uppercase",letterSpacing:0.4}}>ROI</div>
                       <div style={{fontFamily:"'Georgia',serif",fontSize:22,fontWeight:700,color:roi>=0?"#27AE60":"#C0392B"}}>{roi}%</div>
                     </div>
                   )}
@@ -1154,13 +1154,13 @@ export function Marketing({ supabase, leads, gastos }) {
                     {l:"Leads",v:c.leads_generados},
                     {l:"Ventas atribuidas",v:fmt(c.ventas_atribuidas)},
                   ].map(k=>(
-                    <div key={k.l} style={{background:"#F5F0E8",borderRadius:6,padding:"6px 10px"}}>
-                      <div style={{fontSize:9,color:"#8A8278",textTransform:"uppercase",letterSpacing:0.3,marginBottom:1}}>{k.l}</div>
-                      <div style={{fontSize:13,fontWeight:700,color:"#1A1714"}}>{k.v}</div>
+                    <div key={k.l} style={{background:"#21262D",borderRadius:6,padding:"6px 10px"}}>
+                      <div style={{fontSize:9,color:"#8B949E",textTransform:"uppercase",letterSpacing:0.3,marginBottom:1}}>{k.l}</div>
+                      <div style={{fontSize:13,fontWeight:700,color:"#E8E8E8"}}>{k.v}</div>
                     </div>
                   ))}
                 </div>
-                {c.notas && <div style={{fontSize:11,color:"#8A8278",marginTop:8,fontStyle:"italic"}}>{c.notas}</div>}
+                {c.notas && <div style={{fontSize:11,color:"#8B949E",marginTop:8,fontStyle:"italic"}}>{c.notas}</div>}
               </div>
             );
           })}
@@ -1170,23 +1170,23 @@ export function Marketing({ supabase, leads, gastos }) {
       {/* CANALES */}
       {subtab==="canales" && (
         <div>
-          <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,padding:18,marginBottom:12}}>
-            <div style={{fontWeight:700,fontSize:13,color:"#1A1714",marginBottom:14}}>Leads por canal de origen</div>
-            {leadsPorCanal.length===0 && <div style={{color:"#8A8278",fontSize:13}}>No hay leads con canal registrado todavía</div>}
+          <div style={{background:"#161B22",border:"1px solid #21262D",borderRadius:10,padding:18,marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:13,color:"#E8E8E8",marginBottom:14}}>Leads por canal de origen</div>
+            {leadsPorCanal.length===0 && <div style={{color:"#8B949E",fontSize:13}}>No hay leads con canal registrado todavía</div>}
             {leadsPorCanal.sort((a,b)=>b.total-a.total).map(c => {
               const maxTotal = Math.max(...leadsPorCanal.map(x=>x.total),1);
               const convRate = c.total>0 ? Math.round(c.ganados/c.total*100) : 0;
               return (
                 <div key={c.canal} style={{marginBottom:14}}>
                   <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                    <span style={{fontSize:13,fontWeight:600,color:"#1A1714"}}>{c.canal}</span>
-                    <div style={{display:"flex",gap:16,fontSize:12,color:"#8A8278"}}>
+                    <span style={{fontSize:13,fontWeight:600,color:"#E8E8E8"}}>{c.canal}</span>
+                    <div style={{display:"flex",gap:16,fontSize:12,color:"#8B949E"}}>
                       <span>{c.total} leads</span>
                       <span style={{color:"#27AE60"}}>{c.ganados} ganados ({convRate}%)</span>
                       {c.valor>0 && <span style={{color:"#3D5A52",fontWeight:600}}>{fmt(c.valor)}</span>}
                     </div>
                   </div>
-                  <div style={{background:"#E8E2D8",borderRadius:4,height:8,position:"relative"}}>
+                  <div style={{background:"#30363D",borderRadius:4,height:8,position:"relative"}}>
                     <div style={{background:"#C8A96E",width:`${Math.round(c.total/maxTotal*100)}%`,height:"100%",borderRadius:4}}/>
                     <div style={{background:"#27AE60",width:`${Math.round(c.ganados/maxTotal*100)}%`,height:"100%",borderRadius:4,position:"absolute",top:0,opacity:0.6}}/>
                   </div>
@@ -1214,22 +1214,22 @@ export function Marketing({ supabase, leads, gastos }) {
       {/* GASTOS */}
       {subtab==="gastos" && (
         <div>
-          <div style={{background:"#FDFCFA",border:"1px solid #E8E2D8",borderRadius:10,overflow:"hidden",marginBottom:12}}>
-            <div style={{padding:"12px 18px",borderBottom:"1px solid #F5F0E8",fontWeight:700,fontSize:13,color:"#1A1714"}}>
+          <div style={{background:"#161B22",border:"1px solid #21262D",borderRadius:10,overflow:"hidden",marginBottom:12}}>
+            <div style={{padding:"12px 18px",borderBottom:"1px solid #21262D",fontWeight:700,fontSize:13,color:"#E8E8E8"}}>
               Gastos de marketing — {fmt(totalGastosMkt)} total
             </div>
-            {gastosMarketing.length===0 && <div style={{padding:24,color:"#8A8278",fontSize:13,textAlign:"center"}}>Sin gastos de marketing registrados. Agregálos desde el módulo de Contabilidad con categoría "Marketing".</div>}
+            {gastosMarketing.length===0 && <div style={{padding:24,color:"#8B949E",fontSize:13,textAlign:"center"}}>Sin gastos de marketing registrados. Agregálos desde el módulo de Contabilidad con categoría "Marketing".</div>}
             {[...gastosMarketing].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).map((g,i)=>(
               <div key={g.id} style={{padding:"11px 18px",borderBottom:i<gastosMarketing.length-1?"1px solid #F5F0E8":"none",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div>
-                  <div style={{fontSize:13,fontWeight:600,color:"#1A1714"}}>{g.desc||g.descripcion}</div>
-                  <div style={{fontSize:11,color:"#8A8278"}}>{fmtDate(g.fecha)}{g.proyecto&&` · ${g.proyecto}`}</div>
+                  <div style={{fontSize:13,fontWeight:600,color:"#E8E8E8"}}>{g.desc||g.descripcion}</div>
+                  <div style={{fontSize:11,color:"#8B949E"}}>{fmtDate(g.fecha)}{g.proyecto&&` · ${g.proyecto}`}</div>
                 </div>
                 <div style={{fontWeight:700,color:"#C0392B",fontSize:14}}>{fmt(g.monto)}</div>
               </div>
             ))}
           </div>
-          <div style={{background:"#FEF9EC",border:"1px solid #F0D080",borderRadius:8,padding:"10px 16px",fontSize:12,color:"#B8860B"}}>
+          <div style={{background:"#2D1F00",border:"1px solid #F0D080",borderRadius:8,padding:"10px 16px",fontSize:12,color:"#B8860B"}}>
             💡 Para agregar gastos de marketing, usá el botón <strong>+ Gasto</strong> en el módulo de Contabilidad y seleccioná la categoría <strong>Marketing</strong>.
           </div>
         </div>
@@ -1238,15 +1238,15 @@ export function Marketing({ supabase, leads, gastos }) {
       {/* Modal campaña */}
       {modal==="campana" && (
         <div style={{position:"fixed",inset:0,background:"rgba(26,23,20,0.55)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
-          <div style={{background:"#FDFCFA",borderRadius:12,width:"100%",maxWidth:540,maxHeight:"88vh",overflow:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.25)"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 24px 14px",borderBottom:"1px solid #F5F0E8"}}>
-              <span style={{fontFamily:"'Georgia',serif",fontSize:17,fontWeight:600,color:"#1A1714"}}>{form.id?"Editar campaña":"Nueva campaña"}</span>
-              <button onClick={()=>setModal(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#8A8278"}}>×</button>
+          <div style={{background:"#161B22",borderRadius:12,width:"100%",maxWidth:540,maxHeight:"88vh",overflow:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.25)"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 24px 14px",borderBottom:"1px solid #21262D"}}>
+              <span style={{fontFamily:"'Georgia',serif",fontSize:17,fontWeight:600,color:"#E8E8E8"}}>{form.id?"Editar campaña":"Nueva campaña"}</span>
+              <button onClick={()=>setModal(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#8B949E"}}>×</button>
             </div>
             <div style={{padding:"20px 24px 24px"}}>
               <div style={{marginBottom:14}}>
-                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Nombre de la campaña</div>
-                <input value={form.nombre||""} onChange={e=>setForm({...form,nombre:e.target.value})} placeholder="Ej: Instagram Ads - Butaca julio" style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Nombre de la campaña</div>
+                <input value={form.nombre||""} onChange={e=>setForm({...form,nombre:e.target.value})} placeholder="Ej: Instagram Ads - Butaca julio" style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
                 {[
@@ -1255,54 +1255,54 @@ export function Marketing({ supabase, leads, gastos }) {
                   {l:"Estado",k:"estado",opts:ESTADOS_CAMPAÑA},
                 ].map(f=>(
                   <div key={f.k} style={{marginBottom:14}}>
-                    <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>{f.l}</div>
-                    <select value={form[f.k]||f.opts[0]} onChange={e=>setForm({...form,[f.k]:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none"}}>
+                    <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>{f.l}</div>
+                    <select value={form[f.k]||f.opts[0]} onChange={e=>setForm({...form,[f.k]:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none"}}>
                       {f.opts.map(o=><option key={o}>{o}</option>)}
                     </select>
                   </div>
                 ))}
               </div>
               <div style={{marginBottom:14}}>
-                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Objetivo</div>
-                <input value={form.objetivo||""} onChange={e=>setForm({...form,objetivo:e.target.value})} placeholder="Ej: Generar consultas para TV Walls" style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Objetivo</div>
+                <input value={form.objetivo||""} onChange={e=>setForm({...form,objetivo:e.target.value})} placeholder="Ej: Generar consultas para TV Walls" style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Fecha inicio</div>
-                  <input type="date" value={form.fecha_inicio||today} onChange={e=>setForm({...form,fecha_inicio:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Fecha inicio</div>
+                  <input type="date" value={form.fecha_inicio||today} onChange={e=>setForm({...form,fecha_inicio:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Fecha fin</div>
-                  <input type="date" value={form.fecha_fin||""} onChange={e=>setForm({...form,fecha_fin:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
-                </div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Presupuesto (₡)</div>
-                  <input type="number" value={form.presupuesto||""} onChange={e=>setForm({...form,presupuesto:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
-                </div>
-                <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Gasto real (₡)</div>
-                  <input type="number" value={form.gasto_real||""} onChange={e=>setForm({...form,gasto_real:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Fecha fin</div>
+                  <input type="date" value={form.fecha_fin||""} onChange={e=>setForm({...form,fecha_fin:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Leads generados</div>
-                  <input type="number" value={form.leads_generados||""} onChange={e=>setForm({...form,leads_generados:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Presupuesto (₡)</div>
+                  <input type="number" value={form.presupuesto||""} onChange={e=>setForm({...form,presupuesto:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Ventas atribuidas (₡)</div>
-                  <input type="number" value={form.ventas_atribuidas||""} onChange={e=>setForm({...form,ventas_atribuidas:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Gasto real (₡)</div>
+                  <input type="number" value={form.gasto_real||""} onChange={e=>setForm({...form,gasto_real:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Leads generados</div>
+                  <input type="number" value={form.leads_generados||""} onChange={e=>setForm({...form,leads_generados:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
+                </div>
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Ventas atribuidas (₡)</div>
+                  <input type="number" value={form.ventas_atribuidas||""} onChange={e=>setForm({...form,ventas_atribuidas:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box"}}/>
                 </div>
               </div>
               <div style={{marginBottom:14}}>
-                <div style={{fontSize:11,fontWeight:600,color:"#8A8278",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Notas</div>
-                <textarea value={form.notas||""} onChange={e=>setForm({...form,notas:e.target.value})} style={{width:"100%",border:"1.5px solid #E2DDD6",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#1A1714",background:"#FDFCFA",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:60}}/>
+                <div style={{fontSize:11,fontWeight:600,color:"#8B949E",marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>Notas</div>
+                <textarea value={form.notas||""} onChange={e=>setForm({...form,notas:e.target.value})} style={{width:"100%",border:"1.5px solid #30363D",borderRadius:6,padding:"8px 10px",fontSize:13,color:"#E8E8E8",background:"#161B22",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:60}}/>
               </div>
               <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar?")){await supabase.from("campanas_marketing").delete().eq("id",form.id);setCampanas(campanas.filter(c=>c.id!==form.id));setModal(null);}}} style={{background:"#FDECEA",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
-                <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#1A1714",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
+                {form.id && <button onClick={async()=>{if(confirm("¿Eliminar?")){await supabase.from("campanas_marketing").delete().eq("id",form.id);setCampanas(campanas.filter(c=>c.id!==form.id));setModal(null);}}} style={{background:"#2D0F0F",color:"#C0392B",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Eliminar</button>}
+                <button onClick={()=>setModal(null)} style={{background:"transparent",color:"#E8E8E8",border:"1.5px solid #D0C9C0",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
                 <button onClick={saveCampana} style={{background:"#1A1714",color:"#C8A96E",border:"none",borderRadius:7,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer"}}>Guardar</button>
               </div>
             </div>
