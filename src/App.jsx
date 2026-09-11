@@ -159,12 +159,30 @@ function Dashboard({ projects, ingresos, gastos, recordatorios, setTab, meta, se
   const cotizacionesPendientes = leads.filter(l => l.estado === "Cotización enviada").length;
 
   // Calendar events
+  const CAL_COLORS_MAP = {
+    "Entrega":"#58A6FF","Instalación":"#3FB950","Pago":"#F85149",
+    "Reunión":"#BC8CFF","Administrativo":"#E3B341","Mantenimiento":"#FF7B54",
+  };
   const allEvents = [
-    ...activos.filter(p => p.entrega).map(p => ({ fecha: p.fecha_entrega || p.entrega, titulo: p.nombre, tipo: p.estado === "Instalación" ? "Instalación" : "Entrega", color: "#58A6FF" })),
-    ...recordatorios.filter(r => !r.hecho && r.fecha).map(r => ({ fecha: r.fecha, titulo: r.texto, tipo: r.tipo, color: r.tipo==="Pago"?"#F85149":r.tipo==="Maquinaria"?"#E3B341":"#C8A96E" })),
+    ...activos.filter(p => p.entrega).map(p => {
+      const tipo = p.estado === "Instalación" ? "Instalación" : "Entrega";
+      return { fecha: p.entrega, titulo: p.nombre, tipo, color: CAL_COLORS_MAP[tipo] };
+    }),
+    ...recordatorios.filter(r => !r.hecho && r.fecha).map(r => {
+      const tipo = r.tipo === "Maquinaria" ? "Mantenimiento" : (CAL_COLORS_MAP[r.tipo] ? r.tipo : "Administrativo");
+      return { fecha: r.fecha, titulo: r.texto, tipo, color: CAL_COLORS_MAP[tipo]||"#C8A96E" };
+    }),
   ].filter(e => e.fecha);
 
-  const TIPOS_CAL = ["Todos","Entrega","Instalación","Pago","Maquinaria","Reunión"];
+  const TIPOS_CAL = ["Todos","Entrega","Instalación","Pago","Reunión","Administrativo","Mantenimiento"];
+  const CAL_COLORS = {
+    "Entrega":       "#58A6FF",
+    "Instalación":   "#3FB950",
+    "Pago":          "#F85149",
+    "Reunión":       "#BC8CFF",
+    "Administrativo":"#E3B341",
+    "Mantenimiento": "#FF7B54",
+  };
   const eventosFiltrados = calFiltro === "Todos" ? allEvents : allEvents.filter(e => e.tipo === calFiltro);
 
   // Calendar grid
@@ -203,9 +221,9 @@ function Dashboard({ projects, ingresos, gastos, recordatorios, setTab, meta, se
         <KPI label="Por cobrar" value={fmt(porCobrar)} color="#C8A96E" icon="💰" onClick={()=>setTab("contabilidad")} />
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:20 }}>
-        <KPI label="Por pagar" value={fmt(0)} color="#F85149" icon="💳" onClick={()=>setTab("contabilidad")} />
         <KPI label="Cotizaciones pendientes" value={cotizacionesPendientes} color="#E3B341" icon="📝" onClick={()=>setTab("leads")} />
         <KPI label="Leads activos" value={leadsActivos.length} color="#BC8CFF" icon="◎" onClick={()=>setTab("leads")} />
+        <KPI label="Por pagar" value={fmt(0)} color="#F85149" icon="💳" onClick={()=>setTab("contabilidad")} />
       </div>
 
       {/* Calendario */}
@@ -217,37 +235,68 @@ function Dashboard({ projects, ingresos, gastos, recordatorios, setTab, meta, se
             <button onClick={()=>setCalMes(new Date(year,month+1,1))} style={{ background:"#21262D", border:"1px solid #30363D", borderRadius:6, padding:"4px 10px", color:"#E8E8E8", cursor:"pointer" }}>›</button>
           </div>
         </div>
-        {/* Filtros calendario */}
-        <div style={{ display:"flex", gap:6, marginBottom:12, flexWrap:"wrap" }}>
-          {TIPOS_CAL.map(t=>(
-            <button key={t} onClick={()=>setCalFiltro(t)} style={{ padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:600, cursor:"pointer", border:`1px solid ${calFiltro===t?"#C8A96E":"#30363D"}`, background:calFiltro===t?"#2D1F00":"transparent", color:calFiltro===t?"#C8A96E":"#8B949E" }}>
+        {/* Filtros calendario con colores */}
+        <div style={{ display:"flex", gap:6, marginBottom:14, flexWrap:"wrap" }}>
+          <button onClick={()=>setCalFiltro("Todos")} style={{ padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:600, cursor:"pointer", border:`1px solid ${calFiltro==="Todos"?"#E8E8E8":"#30363D"}`, background:calFiltro==="Todos"?"#30363D":"transparent", color:"#E8E8E8" }}>
+            Todos
+          </button>
+          {Object.entries(CAL_COLORS).map(([t,c])=>(
+            <button key={t} onClick={()=>setCalFiltro(t)} style={{ padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:600, cursor:"pointer", border:`1px solid ${calFiltro===t?c:"#30363D"}`, background:calFiltro===t?c+"22":"transparent", color:calFiltro===t?c:"#8B949E" }}>
               {t}
             </button>
           ))}
         </div>
-        {/* Grid calendario */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2 }}>
-          {["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"].map(d=>(
-            <div key={d} style={{ textAlign:"center", fontSize:10, color:"#8B949E", fontWeight:600, padding:"4px 0" }}>{d}</div>
+        {/* Leyenda de colores */}
+        <div style={{ display:"flex", gap:12, marginBottom:12, flexWrap:"wrap" }}>
+          {Object.entries(CAL_COLORS).map(([t,c])=>(
+            <div key={t} style={{ display:"flex", alignItems:"center", gap:4 }}>
+              <div style={{ width:8, height:8, borderRadius:2, background:c }}/>
+              <span style={{ fontSize:10, color:"#8B949E" }}>{t}</span>
+            </div>
           ))}
-          {Array.from({length:firstDay}).map((_,i)=><div key={`e${i}`}/>)}
-          {Array.from({length:daysInMonth}).map((_,i)=>{
-            const day = i+1;
-            const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-            const dayEvents = eventosFiltrados.filter(e => e.fecha === dateStr);
-            const isToday = dateStr === new Date().toISOString().split("T")[0];
-            return (
-              <div key={day} style={{ minHeight:48, background:isToday?"#21262D":"transparent", borderRadius:6, padding:"4px", border:isToday?"1px solid #30363D":"1px solid transparent" }}>
-                <div style={{ fontSize:11, color:isToday?"#C8A96E":"#8B949E", fontWeight:isToday?700:400, marginBottom:2 }}>{day}</div>
-                {dayEvents.slice(0,2).map((ev,ei)=>(
-                  <div key={ei} style={{ background:ev.color+"22", borderLeft:`2px solid ${ev.color}`, borderRadius:3, padding:"1px 4px", fontSize:9, color:ev.color, marginBottom:1, overflow:"hidden", whiteSpace:"nowrap", textOverflow:"ellipsis" }}>
-                    {ev.titulo}
-                  </div>
-                ))}
-                {dayEvents.length>2 && <div style={{ fontSize:9, color:"#8B949E" }}>+{dayEvents.length-2}</div>}
+        </div>
+        {/* Grid + Lista lado a lado */}
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 240px", gap:16 }}>
+          {/* Grid calendario */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2 }}>
+            {["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"].map(d=>(
+              <div key={d} style={{ textAlign:"center", fontSize:10, color:"#8B949E", fontWeight:600, padding:"4px 0" }}>{d}</div>
+            ))}
+            {Array.from({length:firstDay}).map((_,i)=><div key={`e${i}`}/>)}
+            {Array.from({length:daysInMonth}).map((_,i)=>{
+              const day = i+1;
+              const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+              const dayEvents = eventosFiltrados.filter(e => e.fecha === dateStr);
+              const isToday = dateStr === new Date().toISOString().split("T")[0];
+              return (
+                <div key={day} style={{ minHeight:44, background:isToday?"#21262D":"transparent", borderRadius:6, padding:"3px", border:isToday?"1px solid #30363D":"1px solid transparent" }}>
+                  <div style={{ fontSize:10, color:isToday?"#C8A96E":"#8B949E", fontWeight:isToday?700:400, marginBottom:2 }}>{day}</div>
+                  {dayEvents.slice(0,2).map((ev,ei)=>(
+                    <div key={ei} style={{ background:ev.color+"22", borderLeft:`2px solid ${ev.color}`, borderRadius:3, padding:"1px 3px", fontSize:8, color:ev.color, marginBottom:1, overflow:"hidden", whiteSpace:"nowrap", textOverflow:"ellipsis" }}>
+                      {ev.titulo}
+                    </div>
+                  ))}
+                  {dayEvents.length>2 && <div style={{ fontSize:8, color:"#8B949E" }}>+{dayEvents.length-2}</div>}
+                </div>
+              );
+            })}
+          </div>
+          {/* Lista de eventos del mes */}
+          <div style={{ overflowY:"auto", maxHeight:320 }}>
+            <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", textTransform:"uppercase", letterSpacing:0.5, marginBottom:8 }}>Este mes</div>
+            {eventosFiltrados.sort((a,b)=>a.fecha.localeCompare(b.fecha)).length===0 && (
+              <div style={{ fontSize:12, color:"#8B949E" }}>Sin eventos</div>
+            )}
+            {eventosFiltrados.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map((ev,i)=>(
+              <div key={i} style={{ display:"flex", gap:8, marginBottom:8, alignItems:"flex-start" }}>
+                <div style={{ width:3, borderRadius:2, background:ev.color, alignSelf:"stretch", flexShrink:0, minHeight:32 }}/>
+                <div>
+                  <div style={{ fontSize:11, fontWeight:600, color:"#E8E8E8", lineHeight:1.3 }}>{ev.titulo}</div>
+                  <div style={{ fontSize:10, color:ev.color }}>{fmtDate(ev.fecha)} · {ev.tipo}</div>
+                </div>
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
       </div>
 
