@@ -1209,7 +1209,7 @@ export default function App() {
   const [meta, setMeta] = useState(2500000);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Load all data from Supabase on mount
+  // Load all data from Supabase on mount + auto-refresh every 30s
   useEffect(() => {
     async function loadData() {
       const [p, i, g, prov, oc, rec, lds] = await Promise.all([
@@ -1231,6 +1231,8 @@ export default function App() {
       setLoading(false);
     }
     loadData();
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const pendientes = recordatorios.filter(r => !r.hecho && daysLeft(r.fecha) <= 3).length;
