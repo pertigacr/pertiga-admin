@@ -1278,7 +1278,7 @@ export default function App() {
         <style>{`@media(min-width:768px){.sidebar{transform:translateX(0)!important}}`}</style>
         <div style={{ padding:"16px 20px 14px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <div>
-            <img src="/logo.png" alt="Pértiga" style={{ height:42, marginBottom:2 }} />
+            <img src="/logo.png" alt="Pértiga" style={{ height:120, marginBottom:4, width:"100%" }} />
             <div style={{ fontSize:9, color:"#30363D", letterSpacing:1.5, textTransform:"uppercase", marginTop:1 }}>Panel administrativo</div>
           </div>
           <button onClick={()=>setSidebarOpen(false)}
