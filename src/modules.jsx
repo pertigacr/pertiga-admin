@@ -1658,3 +1658,278 @@ export function Biblioteca({ supabase }) {
     </div>
   );
 }
+
+// ═══════════════════════════════════════════════════════
+// TAREAS — Módulo unificado de tareas y pendientes
+// ═══════════════════════════════════════════════════════
+const TIPOS_TAREA = ["Entrega","Instalación","Pago","Reunión","Operativo","Mantenimiento"];
+const ESTADOS_TAREA = ["Pendiente","En proceso","Completado"];
+const OPERARIOS_TAREAS = ["Javier","Bernal","Gabriel","Elías","Sin asignar"];
+const TIPO_COLORS = {
+  "Entrega":"#58A6FF","Instalación":"#3FB950","Pago":"#F85149",
+  "Reunión":"#BC8CFF","Operativo":"#E3B341","Mantenimiento":"#FF7B54",
+};
+
+export function Tareas({ supabase, recordatorios, setRecordatorios, projects }) {
+  const [tareasList, setTareasList] = useState([]);
+  const [modal, setModal] = useState(null);
+  const [form, setForm] = useState({});
+  const [filtroTipo, setFiltroTipo] = useState("Todos");
+  const [filtroAsignado, setFiltroAsignado] = useState("Todos");
+  const [filtroEstado, setFiltroEstado] = useState("Pendientes");
+  const [loaded, setLoaded] = useState(false);
+
+  const today = new Date().toISOString().split("T")[0];
+  const fmt = n => `₡${Number(n).toLocaleString("es-CR")}`;
+  const fmtDate = d => { if(!d) return ""; const [y,m,dd]=d.split("-"); return `${dd}/${m}/${y}`; };
+  const daysLeft = d => Math.round((new Date(d)-new Date(today))/86400000);
+
+  // Combine recordatorios + tareas_unificadas table
+  useState(() => {
+    supabase.from("tareas_unificadas").select("*").then(r => {
+      setTareasList(r.data||[]);
+      setLoaded(true);
+    });
+  }, []);
+
+  // Convert recordatorios to unified format for display
+  const recAsItems = recordatorios.map(r => ({
+    id: `rec_${r.id}`,
+    titulo: r.texto,
+    tipo: r.tipo==="Maquinaria"?"Mantenimiento":r.tipo==="Ventas"?"Operativo":(TIPOS_TAREA.includes(r.tipo)?r.tipo:"Operativo"),
+    estado: r.hecho ? "Completado" : "Pendiente",
+    asignado: "Javier",
+    fecha_limite: r.fecha,
+    proyecto: "",
+    notas: "",
+    source: "recordatorio",
+    original_id: r.id,
+  }));
+
+  const allItems = [...recAsItems, ...tareasList];
+
+  const filtered = allItems.filter(t => {
+    const matchTipo = filtroTipo === "Todos" || t.tipo === filtroTipo;
+    const matchAsignado = filtroAsignado === "Todos" || t.asignado === filtroAsignado;
+    const matchEstado = filtroEstado === "Todos" ? true : filtroEstado === "Pendientes" ? t.estado !== "Completado" : t.estado === "Completado";
+    return matchTipo && matchAsignado && matchEstado;
+  }).sort((a,b) => {
+    if (!a.fecha_limite && !b.fecha_limite) return 0;
+    if (!a.fecha_limite) return 1;
+    if (!b.fecha_limite) return -1;
+    return new Date(a.fecha_limite) - new Date(b.fecha_limite);
+  });
+
+  const save = async () => {
+    if (!form.titulo) return;
+    const data = {
+      titulo: form.titulo, tipo: form.tipo||"Operativo",
+      estado: form.estado||"Pendiente", asignado: form.asignado||"Javier",
+      fecha_limite: form.fecha_limite||"", proyecto: form.proyecto||"",
+      notas: form.notas||""
+    };
+    if (form.id && !String(form.id).startsWith("rec_")) {
+      await supabase.from("tareas_unificadas").update(data).eq("id", form.id);
+      setTareasList(tareasList.map(t => t.id===form.id ? {...data,id:form.id} : t));
+    } else {
+      const { data: newT } = await supabase.from("tareas_unificadas").insert(data).select().single();
+      setTareasList([...tareasList, newT]);
+    }
+    setModal(null);
+  };
+
+  const toggleEstado = async (item) => {
+    const newEstado = item.estado === "Completado" ? "Pendiente" : "Completado";
+    if (item.source === "recordatorio") {
+      const hecho = newEstado === "Completado";
+      await supabase.from("recordatorios").update({ hecho }).eq("id", item.original_id);
+      setRecordatorios(recordatorios.map(r => r.id===item.original_id ? {...r, hecho} : r));
+    } else {
+      await supabase.from("tareas_unificadas").update({ estado: newEstado }).eq("id", item.id);
+      setTareasList(tareasList.map(t => t.id===item.id ? {...t, estado:newEstado} : t));
+    }
+  };
+
+  const del = async (item) => {
+    if (!confirm("¿Eliminar tarea?")) return;
+    if (item.source === "recordatorio") {
+      await supabase.from("recordatorios").delete().eq("id", item.original_id);
+      setRecordatorios(recordatorios.filter(r => r.id !== item.original_id));
+    } else {
+      await supabase.from("tareas_unificadas").delete().eq("id", item.id);
+      setTareasList(tareasList.filter(t => t.id !== item.id));
+    }
+    setModal(null);
+  };
+
+  const urgColor = (item) => {
+    if (item.estado === "Completado") return "#3FB950";
+    if (!item.fecha_limite) return "#8B949E";
+    const d = daysLeft(item.fecha_limite);
+    if (d < 0) return "#F85149";
+    if (d <= 2) return "#E3B341";
+    return TIPO_COLORS[item.tipo] || "#8B949E";
+  };
+
+  const pendientes = allItems.filter(t => t.estado !== "Completado").length;
+  const vencidos = allItems.filter(t => t.estado !== "Completado" && t.fecha_limite && daysLeft(t.fecha_limite) < 0).length;
+
+  return (
+    <div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+        <div>
+          <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:"#E8E8E8" }}>✓ Tareas</div>
+          <div style={{ fontSize:12, color:"#8B949E", marginTop:2 }}>
+            {pendientes} pendientes{vencidos>0 && <span style={{ color:"#F85149" }}> · {vencidos} vencidas</span>}
+          </div>
+        </div>
+        <button onClick={()=>{ setForm({tipo:"Operativo",estado:"Pendiente",asignado:"Javier",fecha_limite:""}); setModal("nueva"); }}
+          style={{ background:"#21262D", color:"#E8E8E8", border:"1px solid #30363D", borderRadius:7, padding:"9px 18px", fontSize:13, fontWeight:600, cursor:"pointer" }}>
+          + Nueva tarea
+        </button>
+      </div>
+
+      {/* Filtros */}
+      <div style={{ display:"flex", gap:8, marginBottom:10, flexWrap:"wrap" }}>
+        {/* Estado */}
+        {["Pendientes","Todos","Completados"].map(f=>(
+          <button key={f} onClick={()=>setFiltroEstado(f)} style={{ padding:"5px 12px", borderRadius:20, fontSize:12, fontWeight:600, cursor:"pointer", border:`1px solid ${filtroEstado===f?"#C8A96E":"#30363D"}`, background:filtroEstado===f?"#2D1F00":"transparent", color:filtroEstado===f?"#C8A96E":"#8B949E" }}>
+            {f}
+          </button>
+        ))}
+      </div>
+      <div style={{ display:"flex", gap:6, marginBottom:10, flexWrap:"wrap" }}>
+        {/* Tipo */}
+        <button onClick={()=>setFiltroTipo("Todos")} style={{ padding:"4px 10px", borderRadius:20, fontSize:11, fontWeight:600, cursor:"pointer", border:`1px solid ${filtroTipo==="Todos"?"#E8E8E8":"#30363D"}`, background:filtroTipo==="Todos"?"#30363D":"transparent", color:"#E8E8E8" }}>
+          Todos
+        </button>
+        {TIPOS_TAREA.map(t=>(
+          <button key={t} onClick={()=>setFiltroTipo(t)} style={{ padding:"4px 10px", borderRadius:20, fontSize:11, fontWeight:600, cursor:"pointer", border:`1px solid ${filtroTipo===t?TIPO_COLORS[t]:"#30363D"}`, background:filtroTipo===t?TIPO_COLORS[t]+"22":"transparent", color:filtroTipo===t?TIPO_COLORS[t]:"#8B949E" }}>
+            {t}
+          </button>
+        ))}
+      </div>
+      <div style={{ display:"flex", gap:6, marginBottom:16, flexWrap:"wrap" }}>
+        {/* Asignado */}
+        {["Todos",...OPERARIOS_TAREAS].map(a=>(
+          <button key={a} onClick={()=>setFiltroAsignado(a)} style={{ padding:"4px 10px", borderRadius:20, fontSize:11, cursor:"pointer", border:`1px solid ${filtroAsignado===a?"#C8A96E":"#30363D"}`, background:filtroAsignado===a?"#2D1F00":"transparent", color:filtroAsignado===a?"#C8A96E":"#8B949E" }}>
+            {a==="Todos"?"👥 Todos":"👤 "+a}
+          </button>
+        ))}
+      </div>
+
+      {/* Lista de tareas */}
+      <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+        {filtered.length===0 && (
+          <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:32, textAlign:"center", color:"#8B949E", fontSize:13 }}>
+            Sin tareas en esta categoría
+          </div>
+        )}
+        {filtered.map(item => {
+          const d = item.fecha_limite ? daysLeft(item.fecha_limite) : null;
+          const col = urgColor(item);
+          const completado = item.estado === "Completado";
+          return (
+            <div key={item.id} style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:"12px 16px", display:"flex", alignItems:"center", gap:12, borderLeft:`4px solid ${col}` }}>
+              {/* Checkbox */}
+              <button onClick={()=>toggleEstado(item)} style={{ width:22, height:22, borderRadius:5, border:`2px solid ${col}`, background:completado?col:"transparent", cursor:"pointer", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                {completado && <span style={{ color:"#0D1117", fontSize:12, fontWeight:700 }}>✓</span>}
+              </button>
+              {/* Contenido */}
+              <div style={{ flex:1, cursor:"pointer" }} onClick={()=>{ if(!String(item.id).startsWith("rec_")) { setForm({...item}); setModal("editar"); } }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3, flexWrap:"wrap" }}>
+                  <span style={{ fontSize:13, fontWeight:600, color:completado?"#8B949E":"#E8E8E8", textDecoration:completado?"line-through":"none" }}>{item.titulo}</span>
+                  <span style={{ background:TIPO_COLORS[item.tipo]+"22", color:TIPO_COLORS[item.tipo]||"#8B949E", borderRadius:4, padding:"1px 7px", fontSize:10, fontWeight:600 }}>{item.tipo}</span>
+                  {item.asignado && item.asignado !== "Sin asignar" && (
+                    <span style={{ background:"#21262D", color:"#8B949E", borderRadius:4, padding:"1px 7px", fontSize:10 }}>👤 {item.asignado}</span>
+                  )}
+                  {item.proyecto && (
+                    <span style={{ background:"#21262D", color:"#58A6FF", borderRadius:4, padding:"1px 7px", fontSize:10 }}>📋 {item.proyecto}</span>
+                  )}
+                </div>
+                <div style={{ display:"flex", gap:12, fontSize:11 }}>
+                  {item.fecha_limite && (
+                    <span style={{ color: d!==null&&d<0?"#F85149":d!==null&&d<=2?"#E3B341":"#8B949E", fontWeight: d!==null&&d<=2?600:400 }}>
+                      {fmtDate(item.fecha_limite)} {d!==null&&(d<0?`· ${Math.abs(d)}d vencido`:d===0?"· Hoy":`· En ${d}d`)}
+                    </span>
+                  )}
+                  {item.notas && <span style={{ color:"#8B949E", fontStyle:"italic" }}>{item.notas}</span>}
+                </div>
+              </div>
+              {/* Eliminar */}
+              <button onClick={()=>del(item)} style={{ background:"none", border:"none", cursor:"pointer", color:"#30363D", fontSize:14, padding:"2px 6px" }}
+                onMouseEnter={e=>e.currentTarget.style.color="#F85149"}
+                onMouseLeave={e=>e.currentTarget.style.color="#30363D"}>
+                ×
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Modal nueva/editar tarea */}
+      {(modal==="nueva"||modal==="editar") && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.7)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+          <div style={{ background:"#161B22", border:"1px solid #30363D", borderRadius:12, width:"100%", maxWidth:500, maxHeight:"88vh", overflow:"auto", boxShadow:"0 20px 60px rgba(0,0,0,0.6)" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 24px 14px", borderBottom:"1px solid #21262D" }}>
+              <span style={{ fontFamily:"'Georgia',serif", fontSize:17, fontWeight:600, color:"#E8E8E8" }}>{modal==="nueva"?"Nueva tarea":"Editar tarea"}</span>
+              <button onClick={()=>setModal(null)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:20, color:"#8B949E" }}>×</button>
+            </div>
+            <div style={{ padding:"20px 24px 24px" }}>
+              <div style={{ marginBottom:14 }}>
+                <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>Título</div>
+                <input value={form.titulo||""} onChange={e=>setForm({...form,titulo:e.target.value})} placeholder="¿Qué hay que hacer?"
+                  style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none", boxSizing:"border-box" }}/>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                <div style={{ marginBottom:14 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>Tipo</div>
+                  <select value={form.tipo||"Operativo"} onChange={e=>setForm({...form,tipo:e.target.value})}
+                    style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none" }}>
+                    {TIPOS_TAREA.map(t=><option key={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div style={{ marginBottom:14 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>Estado</div>
+                  <select value={form.estado||"Pendiente"} onChange={e=>setForm({...form,estado:e.target.value})}
+                    style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none" }}>
+                    {ESTADOS_TAREA.map(s=><option key={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                <div style={{ marginBottom:14 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>Asignado a</div>
+                  <select value={form.asignado||"Javier"} onChange={e=>setForm({...form,asignado:e.target.value})}
+                    style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none" }}>
+                    {OPERARIOS_TAREAS.map(o=><option key={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div style={{ marginBottom:14 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>Fecha límite</div>
+                  <input type="date" value={form.fecha_limite||""} onChange={e=>setForm({...form,fecha_limite:e.target.value})}
+                    style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none", boxSizing:"border-box" }}/>
+                </div>
+              </div>
+              <div style={{ marginBottom:14 }}>
+                <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>Proyecto relacionado</div>
+                <input value={form.proyecto||""} onChange={e=>setForm({...form,proyecto:e.target.value})} placeholder="Nombre del proyecto"
+                  style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none", boxSizing:"border-box" }}/>
+              </div>
+              <div style={{ marginBottom:14 }}>
+                <div style={{ fontSize:11, fontWeight:600, color:"#8B949E", marginBottom:4, textTransform:"uppercase", letterSpacing:0.5 }}>Notas</div>
+                <textarea value={form.notas||""} onChange={e=>setForm({...form,notas:e.target.value})}
+                  style={{ width:"100%", border:"1.5px solid #30363D", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#E8E8E8", background:"#21262D", outline:"none", boxSizing:"border-box", resize:"vertical", minHeight:60 }}/>
+              </div>
+              <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+                {modal==="editar" && <button onClick={()=>del(form)} style={{ background:"#2D0F0F", color:"#F85149", border:"none", borderRadius:7, padding:"9px 18px", fontSize:13, fontWeight:600, cursor:"pointer" }}>Eliminar</button>}
+                <button onClick={()=>setModal(null)} style={{ background:"transparent", color:"#E8E8E8", border:"1.5px solid #30363D", borderRadius:7, padding:"9px 18px", fontSize:13, fontWeight:600, cursor:"pointer" }}>Cancelar</button>
+                <button onClick={save} style={{ background:"#21262D", color:"#E8E8E8", border:"1px solid #30363D", borderRadius:7, padding:"9px 18px", fontSize:13, fontWeight:600, cursor:"pointer" }}>Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

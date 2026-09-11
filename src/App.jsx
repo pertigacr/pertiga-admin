@@ -1,5 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-import { LeadTracker, Taller, RecursoHumano, Marketing, ModoTaller, Biblioteca } from "./modules.jsx";
+import { LeadTracker, Taller, RecursoHumano, Marketing, ModoTaller, Biblioteca, Tareas } from "./modules.jsx";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -161,7 +161,7 @@ function Dashboard({ projects, ingresos, gastos, recordatorios, setTab, meta, se
   // Calendar events
   const CAL_COLORS_MAP = {
     "Entrega":"#58A6FF","Instalación":"#3FB950","Pago":"#F85149",
-    "Reunión":"#BC8CFF","Administrativo":"#E3B341","Mantenimiento":"#FF7B54",
+    "Reunión":"#BC8CFF","Operativo":"#E3B341","Mantenimiento":"#FF7B54",
   };
   const allEvents = [
     ...activos.filter(p => p.entrega).map(p => {
@@ -169,18 +169,18 @@ function Dashboard({ projects, ingresos, gastos, recordatorios, setTab, meta, se
       return { fecha: p.entrega, titulo: p.nombre, tipo, color: CAL_COLORS_MAP[tipo] };
     }),
     ...recordatorios.filter(r => !r.hecho && r.fecha).map(r => {
-      const tipo = r.tipo === "Maquinaria" ? "Mantenimiento" : (CAL_COLORS_MAP[r.tipo] ? r.tipo : "Administrativo");
+      const tipo = r.tipo === "Maquinaria" ? "Mantenimiento" : (CAL_COLORS_MAP[r.tipo] ? r.tipo : "Operativo");
       return { fecha: r.fecha, titulo: r.texto, tipo, color: CAL_COLORS_MAP[tipo]||"#C8A96E" };
     }),
   ].filter(e => e.fecha);
 
-  const TIPOS_CAL = ["Todos","Entrega","Instalación","Pago","Reunión","Administrativo","Mantenimiento"];
+  const TIPOS_CAL = ["Todos","Entrega","Instalación","Pago","Reunión","Operativo","Mantenimiento"];
   const CAL_COLORS = {
     "Entrega":       "#58A6FF",
     "Instalación":   "#3FB950",
     "Pago":          "#F85149",
     "Reunión":       "#BC8CFF",
-    "Administrativo":"#E3B341",
+    "Operativo":"#E3B341",
     "Mantenimiento": "#FF7B54",
   };
   const eventosFiltrados = calFiltro === "Todos" ? allEvents : allEvents.filter(e => e.tipo === calFiltro);
@@ -971,7 +971,7 @@ function Recordatorios({ recordatorios, setRecordatorios }) {
   return (
     <div>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-        <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:"#E8E8E8" }}>Recordatorios</div>
+        <div style={{ fontFamily:"'Georgia',serif", fontSize:20, fontWeight:700, color:"#E8E8E8" }}>Tareas</div>
         <Btn onClick={() => { setForm(empty); setModal("new"); }}>+ Nuevo</Btn>
       </div>
 
@@ -1242,7 +1242,7 @@ export default function App() {
     { id:"proyectos",     label:"Proyectos",    icon:"◈" },
     { id:"contabilidad",  label:"Contabilidad", icon:"₡" },
     { id:"proveedores",   label:"Proveedores",  icon:"⊞" },
-    { id:"recordatorios", label:"Recordatorios",icon:"◷", badge: pendientes },
+    { id:"recordatorios", label:"Tareas",       icon:"✓", badge: pendientes },
     { id:"leads",         label:"Leads",         icon:"◎" },
     { id:"taller",        label:"Taller",        icon:"⚙" },
     { id:"rrhh",          label:"Equipo",        icon:"👤" },
@@ -1330,7 +1330,7 @@ export default function App() {
           {tab === "proyectos"     && <Proyectos projects={projects} setProjects={setProjects} />}
           {tab === "contabilidad"  && <Contabilidad ingresos={ingresos} setIngresos={setIngresos} gastos={gastos} setGastos={setGastos} projects={projects} />}
           {tab === "proveedores"   && <Proveedores proveedores={proveedores} setProveedores={setProveedores} ocs={ocs} setOcs={setOcs} />}
-          {tab === "recordatorios" && <Recordatorios recordatorios={recordatorios} setRecordatorios={setRecordatorios} />}
+          {tab === "recordatorios" && <Tareas supabase={supabase} recordatorios={recordatorios} setRecordatorios={setRecordatorios} projects={projects} />}
           {tab === "leads"         && <LeadTracker leads={leads} setLeads={setLeads} supabase={supabase} />}
           {tab === "taller"        && <Taller supabase={supabase} projects={projects} />}
           {tab === "rrhh"          && <RecursoHumano supabase={supabase} />}
