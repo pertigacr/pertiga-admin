@@ -144,94 +144,130 @@ const Btn = ({ children, variant = "primary", ...p }) => {
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 function Dashboard({ projects, ingresos, gastos, recordatorios, setTab, meta, setMeta, leads }) {
+  const [calFiltro, setCalFiltro] = useState("Todos");
+  const [calMes, setCalMes] = useState(new Date());
   const [editMeta, setEditMeta] = useState(false);
   const [metaInput, setMetaInput] = useState("");
 
-  const totalIngresos = ingresos.reduce((s, i) => s + Number(i.monto), 0);
-  const totalGastos   = gastos.reduce((s, g) => s + Number(g.monto), 0);
-  const margen        = totalIngresos - totalGastos;
-  const activos       = projects.filter(p => !["Entregado","Cancelado"].includes(p.estado));
-  const porCobrar     = activos.reduce((s,p) => s + (Number(p.monto) - Number(p.adelanto)), 0);
+  const activos = projects.filter(p => !["Entregado","Cancelado"].includes(p.estado));
+  const porCobrar = activos.reduce((s,p) => s + (Number(p.monto) - Number(p.adelanto)), 0);
+  const totalIngresos = ingresos.reduce((s,i) => s+Number(i.monto), 0);
+  const totalGastos = gastos.reduce((s,g) => s+Number(g.monto), 0);
+  const margen = totalIngresos - totalGastos;
+  const leadsActivos = leads.filter(l => ["Nuevo","Contactado","Cotización enviada","Negociando"].includes(l.estado));
+  const urgentes = recordatorios.filter(r => !r.hecho && daysLeft(r.fecha) <= 5).sort((a,b) => new Date(a.fecha)-new Date(b.fecha));
+  const cotizacionesPendientes = leads.filter(l => l.estado === "Cotización enviada").length;
 
-  const leadsActivos  = leads.filter(l => ["Nuevo","Contactado","Cotización enviada","Negociando"].includes(l.estado));
-  const valorPipeline = leadsActivos.reduce((s,l) => s + Number(l.monto_estimado||0), 0);
+  // Calendar events
+  const allEvents = [
+    ...activos.filter(p => p.entrega).map(p => ({ fecha: p.fecha_entrega || p.entrega, titulo: p.nombre, tipo: p.estado === "Instalación" ? "Instalación" : "Entrega", color: "#58A6FF" })),
+    ...recordatorios.filter(r => !r.hecho && r.fecha).map(r => ({ fecha: r.fecha, titulo: r.texto, tipo: r.tipo, color: r.tipo==="Pago"?"#F85149":r.tipo==="Maquinaria"?"#E3B341":"#C8A96E" })),
+  ].filter(e => e.fecha);
 
-  const urgentes      = recordatorios.filter(r => !r.hecho && daysLeft(r.fecha) <= 5).sort((a,b) => new Date(a.fecha)-new Date(b.fecha));
-  const proxEntregas  = activos.filter(p => p.entrega).sort((a,b) => new Date(a.entrega)-new Date(b.entrega)).slice(0,4);
-  const leadsVencidos = leadsActivos.filter(l => l.fecha_limite && daysLeft(l.fecha_limite) <= 3);
-  const pctMeta       = meta > 0 ? Math.min(100, Math.round(totalIngresos/meta*100)) : 0;
+  const TIPOS_CAL = ["Todos","Entrega","Instalación","Pago","Maquinaria","Reunión"];
+  const eventosFiltrados = calFiltro === "Todos" ? allEvents : allEvents.filter(e => e.tipo === calFiltro);
+
+  // Calendar grid
+  const year = calMes.getFullYear();
+  const month = calMes.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const monthName = calMes.toLocaleDateString("es-CR", { month:"long", year:"numeric" });
+
+  const KPI = ({ label, value, sub, color, onClick, icon }) => (
+    <div onClick={onClick} style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:"14px 16px", cursor:onClick?"pointer":"default" }}
+      onMouseEnter={e=>onClick&&(e.currentTarget.style.borderColor="#30363D")}
+      onMouseLeave={e=>onClick&&(e.currentTarget.style.borderColor="#21262D")}>
+      <div style={{ fontSize:10, fontWeight:600, color:"#8B949E", textTransform:"uppercase", letterSpacing:0.5, marginBottom:4 }}>{icon} {label}</div>
+      <div style={{ fontSize:20, fontWeight:700, color:color||"#E8E8E8", fontFamily:"'Georgia',serif" }}>{value}</div>
+      {sub && <div style={{ fontSize:11, color:"#8B949E", marginTop:2 }}>{sub}</div>}
+    </div>
+  );
 
   const hora = new Date().getHours();
   const saludo = hora < 12 ? "Buenos días" : hora < 18 ? "Buenas tardes" : "Buenas noches";
   const fechaHoy = new Date().toLocaleDateString("es-CR", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
 
-  const KPI = ({ label, value, sub, color, onClick }) => (
-    <div onClick={onClick} style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:"16px 18px", cursor:onClick?"pointer":"default", transition:"border-color 0.2s" }}
-      onMouseEnter={e=>onClick&&(e.currentTarget.style.borderColor="#30363D")}
-      onMouseLeave={e=>onClick&&(e.currentTarget.style.borderColor="#21262D")}>
-      <div style={{ fontSize:10, fontWeight:600, color:"#8B949E", textTransform:"uppercase", letterSpacing:0.5, marginBottom:6 }}>{label}</div>
-      <div style={{ fontSize:22, fontWeight:700, color: color||"#E8E8E8", fontFamily:"'Georgia',serif" }}>{value}</div>
-      {sub && <div style={{ fontSize:11, color:"#8B949E", marginTop:3 }}>{sub}</div>}
-    </div>
-  );
-
   return (
     <div>
       {/* Header */}
-      <div style={{ marginBottom:24 }}>
-        <div style={{ fontFamily:"'Georgia',serif", fontSize:26, fontWeight:700, color:"#E8E8E8" }}>{saludo}, Javier</div>
+      <div style={{ marginBottom:20 }}>
+        <div style={{ fontFamily:"'Georgia',serif", fontSize:24, fontWeight:700, color:"#E8E8E8" }}>{saludo}, Javier</div>
         <div style={{ color:"#8B949E", fontSize:13, marginTop:2, textTransform:"capitalize" }}>{fechaHoy} · Pértiga Mobiliario</div>
       </div>
 
-      {/* KPIs principales */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:16 }}>
-        <KPI label="Facturación del mes" value={fmt(totalIngresos)} sub={new Date().toLocaleDateString("es-CR",{month:"long"})} color="#3FB950" onClick={()=>setTab("contabilidad")} />
-        <KPI label="Margen neto" value={fmt(margen)} sub={totalIngresos>0?`${Math.round(margen/totalIngresos*100)}% del ingreso`:""} color={margen>=0?"#C8A96E":"#F85149"} />
-        <KPI label="Por cobrar" value={fmt(porCobrar)} sub={`${activos.length} proyectos activos`} color="#58A6FF" onClick={()=>setTab("proyectos")} />
+      {/* KPIs */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:16 }}>
+        <KPI label="Pendientes urgentes" value={urgentes.length} color={urgentes.length>0?"#F85149":"#3FB950"} icon="⚡" onClick={()=>setTab("recordatorios")} />
+        <KPI label="Proyectos activos" value={activos.length} color="#58A6FF" icon="📋" onClick={()=>setTab("proyectos")} />
+        <KPI label="Por cobrar" value={fmt(porCobrar)} color="#C8A96E" icon="💰" onClick={()=>setTab("contabilidad")} />
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:20 }}>
-        <KPI label="Pipeline leads" value={fmt(valorPipeline)} sub={`${leadsActivos.length} leads activos`} color="#BC8CFF" onClick={()=>setTab("leads")} />
-        <KPI label="Gastos del mes" value={fmt(totalGastos)} sub="Total egresos" color="#F85149" onClick={()=>setTab("contabilidad")} />
-        <KPI label="Pendientes urgentes" value={urgentes.length} sub="Esta semana" color={urgentes.length>0?"#F85149":"#3FB950"} onClick={()=>setTab("recordatorios")} />
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:20 }}>
+        <KPI label="Por pagar" value={fmt(0)} color="#F85149" icon="💳" onClick={()=>setTab("contabilidad")} />
+        <KPI label="Cotizaciones pendientes" value={cotizacionesPendientes} color="#E3B341" icon="📝" onClick={()=>setTab("leads")} />
+        <KPI label="Leads activos" value={leadsActivos.length} color="#BC8CFF" icon="◎" onClick={()=>setTab("leads")} />
       </div>
 
-      {/* Meta mensual */}
-      <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:"16px 20px", marginBottom:16 }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-          <div>
-            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-              <span style={{ fontSize:12, fontWeight:600, color:"#8B949E", textTransform:"uppercase", letterSpacing:0.5 }}>
-                Meta mensual · {new Date().toLocaleDateString("es-CR",{month:"long",year:"numeric"})}
-              </span>
-              <button onClick={()=>{ setMetaInput(meta); setEditMeta(true); }} style={{ background:"#21262D", border:"1px solid #30363D", borderRadius:4, padding:"2px 8px", fontSize:10, color:"#C8A96E", cursor:"pointer" }}>✏ Editar</button>
+      {/* Calendario */}
+      <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:18, marginBottom:16 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+          <div style={{ fontWeight:700, fontSize:14, color:"#E8E8E8", textTransform:"capitalize" }}>📅 {monthName}</div>
+          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            <button onClick={()=>setCalMes(new Date(year,month-1,1))} style={{ background:"#21262D", border:"1px solid #30363D", borderRadius:6, padding:"4px 10px", color:"#E8E8E8", cursor:"pointer" }}>‹</button>
+            <button onClick={()=>setCalMes(new Date(year,month+1,1))} style={{ background:"#21262D", border:"1px solid #30363D", borderRadius:6, padding:"4px 10px", color:"#E8E8E8", cursor:"pointer" }}>›</button>
+          </div>
+        </div>
+        {/* Filtros calendario */}
+        <div style={{ display:"flex", gap:6, marginBottom:12, flexWrap:"wrap" }}>
+          {TIPOS_CAL.map(t=>(
+            <button key={t} onClick={()=>setCalFiltro(t)} style={{ padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:600, cursor:"pointer", border:`1px solid ${calFiltro===t?"#C8A96E":"#30363D"}`, background:calFiltro===t?"#2D1F00":"transparent", color:calFiltro===t?"#C8A96E":"#8B949E" }}>
+              {t}
+            </button>
+          ))}
+        </div>
+        {/* Grid calendario */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2 }}>
+          {["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"].map(d=>(
+            <div key={d} style={{ textAlign:"center", fontSize:10, color:"#8B949E", fontWeight:600, padding:"4px 0" }}>{d}</div>
+          ))}
+          {Array.from({length:firstDay}).map((_,i)=><div key={`e${i}`}/>)}
+          {Array.from({length:daysInMonth}).map((_,i)=>{
+            const day = i+1;
+            const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+            const dayEvents = eventosFiltrados.filter(e => e.fecha === dateStr);
+            const isToday = dateStr === new Date().toISOString().split("T")[0];
+            return (
+              <div key={day} style={{ minHeight:48, background:isToday?"#21262D":"transparent", borderRadius:6, padding:"4px", border:isToday?"1px solid #30363D":"1px solid transparent" }}>
+                <div style={{ fontSize:11, color:isToday?"#C8A96E":"#8B949E", fontWeight:isToday?700:400, marginBottom:2 }}>{day}</div>
+                {dayEvents.slice(0,2).map((ev,ei)=>(
+                  <div key={ei} style={{ background:ev.color+"22", borderLeft:`2px solid ${ev.color}`, borderRadius:3, padding:"1px 4px", fontSize:9, color:ev.color, marginBottom:1, overflow:"hidden", whiteSpace:"nowrap", textOverflow:"ellipsis" }}>
+                    {ev.titulo}
+                  </div>
+                ))}
+                {dayEvents.length>2 && <div style={{ fontSize:9, color:"#8B949E" }}>+{dayEvents.length-2}</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Resumen financiero + Urgentes */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+        {/* Resumen financiero */}
+        <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:16 }}>
+          <div style={{ fontWeight:700, color:"#E8E8E8", fontSize:13, marginBottom:12 }}>💰 Resumen financiero</div>
+          {[
+            {l:"Ingresos", v:fmt(totalIngresos), c:"#3FB950"},
+            {l:"Gastos", v:fmt(totalGastos), c:"#F85149"},
+            {l:"Margen", v:fmt(margen), c:margen>=0?"#C8A96E":"#F85149"},
+            {l:"Por cobrar", v:fmt(porCobrar), c:"#58A6FF"},
+          ].map(k=>(
+            <div key={k.l} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:"1px solid #21262D" }}>
+              <span style={{ fontSize:12, color:"#8B949E" }}>{k.l}</span>
+              <span style={{ fontSize:13, fontWeight:700, color:k.c }}>{k.v}</span>
             </div>
-            {editMeta ? (
-              <div style={{ display:"flex", gap:8, alignItems:"center", marginTop:6 }}>
-                <input type="number" value={metaInput} onChange={e=>setMetaInput(e.target.value)}
-                  style={{ background:"#21262D", border:"1px solid #30363D", borderRadius:4, padding:"4px 8px", color:"#E8E8E8", fontSize:13, width:140, outline:"none" }} />
-                <button onClick={()=>{ setMeta(Number(metaInput)); setEditMeta(false); }}
-                  style={{ background:"#C8A96E", border:"none", borderRadius:4, padding:"4px 10px", fontSize:12, color:"#0D1117", fontWeight:700, cursor:"pointer" }}>✓</button>
-                <button onClick={()=>setEditMeta(false)} style={{ background:"transparent", border:"none", color:"#8B949E", cursor:"pointer" }}>✕</button>
-              </div>
-            ) : (
-              <div style={{ fontSize:20, fontWeight:700, color:"#E8E8E8", fontFamily:"'Georgia',serif", marginTop:4 }}>
-                {fmt(totalIngresos)} <span style={{ fontSize:13, color:"#8B949E", fontWeight:400 }}>de {fmt(meta)}</span>
-              </div>
-            )}
-          </div>
-          <div style={{ textAlign:"right" }}>
-            <div style={{ fontFamily:"'Georgia',serif", fontSize:32, fontWeight:700, color: pctMeta>=100?"#3FB950":pctMeta>=70?"#C8A96E":"#E8E8E8" }}>{pctMeta}%</div>
-            <div style={{ fontSize:11, color:"#8B949E" }}>completado</div>
-          </div>
+          ))}
         </div>
-        <div style={{ background:"#21262D", borderRadius:4, height:8, overflow:"hidden" }}>
-          <div style={{ background: pctMeta>=100?"#3FB950":pctMeta>=70?"#C8A96E":"#58A6FF", width:`${pctMeta}%`, height:"100%", borderRadius:4, transition:"width 1s" }} />
-        </div>
-        {meta > totalIngresos && <div style={{ fontSize:11, color:"#8B949E", marginTop:4 }}>Faltan {fmt(meta-totalIngresos)} para la meta</div>}
-      </div>
-
-      {/* Alertas + Entregas */}
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
 
         {/* Urgentes */}
         <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:16 }}>
@@ -248,23 +284,24 @@ function Dashboard({ projects, ingresos, gastos, recordatorios, setTab, meta, se
                 <div style={{ width:6, height:6, borderRadius:"50%", background:col, flexShrink:0 }} />
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:12, fontWeight:600, color:"#E8E8E8" }}>{r.texto}</div>
-                  <div style={{ fontSize:11, color:col }}>
-                    {fmtDate(r.fecha)} · {d<0?`${Math.abs(d)}d vencido`:d===0?"Hoy":`En ${d}d`}
-                  </div>
+                  <div style={{ fontSize:11, color:col }}>{fmtDate(r.fecha)} · {d<0?`${Math.abs(d)}d vencido`:d===0?"Hoy":`En ${d}d`}</div>
                 </div>
               </div>
             );
           })}
         </div>
+      </div>
 
-        {/* Próximas entregas */}
+      {/* Proyectos Activos + Leads */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+        {/* Proyectos Activos */}
         <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:16 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-            <span style={{ fontWeight:700, color:"#E8E8E8", fontSize:13 }}>📦 Próximas entregas</span>
+            <span style={{ fontWeight:700, color:"#E8E8E8", fontSize:13 }}>📦 Proyectos Activos</span>
             <span onClick={()=>setTab("proyectos")} style={{ fontSize:11, color:"#C8A96E", cursor:"pointer" }}>Ver todos →</span>
           </div>
-          {proxEntregas.length===0 && <div style={{ color:"#8B949E", fontSize:12 }}>Sin entregas próximas</div>}
-          {proxEntregas.map(p => {
+          {activos.length===0 && <div style={{ color:"#8B949E", fontSize:12 }}>Sin proyectos activos</div>}
+          {activos.sort((a,b)=>new Date(a.entrega)-new Date(b.entrega)).slice(0,4).map(p => {
             const d = daysLeft(p.entrega);
             const col = d<0?"#F85149":d<=3?"#E3B341":"#8B949E";
             return (
@@ -280,15 +317,11 @@ function Dashboard({ projects, ingresos, gastos, recordatorios, setTab, meta, se
             );
           })}
         </div>
-      </div>
 
-      {/* Leads activos + Alertas marketing */}
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-
-        {/* Pipeline leads */}
+        {/* Leads */}
         <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:16 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-            <span style={{ fontWeight:700, color:"#E8E8E8", fontSize:13 }}>◎ Pipeline activo</span>
+            <span style={{ fontWeight:700, color:"#E8E8E8", fontSize:13 }}>◎ Leads</span>
             <span onClick={()=>setTab("leads")} style={{ fontSize:11, color:"#C8A96E", cursor:"pointer" }}>Ver todos →</span>
           </div>
           {leadsActivos.length===0 && <div style={{ color:"#8B949E", fontSize:12 }}>Sin leads activos</div>}
@@ -309,26 +342,6 @@ function Dashboard({ projects, ingresos, gastos, recordatorios, setTab, meta, se
               </div>
             );
           })}
-        </div>
-
-        {/* Alertas financieras */}
-        <div style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:16 }}>
-          <div style={{ fontWeight:700, color:"#E8E8E8", fontSize:13, marginBottom:12 }}>💰 Resumen financiero</div>
-          {[
-            { l:"Facturado", v:fmt(totalIngresos), c:"#3FB950" },
-            { l:"Gastos", v:fmt(totalGastos), c:"#F85149" },
-            { l:"Margen", v:fmt(margen), c:margen>=0?"#C8A96E":"#F85149" },
-            { l:"Por cobrar", v:fmt(porCobrar), c:"#58A6FF" },
-          ].map(k=>(
-            <div key={k.l} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:"1px solid #21262D" }}>
-              <span style={{ fontSize:12, color:"#8B949E" }}>{k.l}</span>
-              <span style={{ fontSize:13, fontWeight:700, color:k.c }}>{k.v}</span>
-            </div>
-          ))}
-          <div style={{ marginTop:10, padding:"8px 10px", background:"#21262D", borderRadius:6 }}>
-            <div style={{ fontSize:10, color:"#8B949E", textTransform:"uppercase", letterSpacing:0.4 }}>Proyección si cerrás pipeline</div>
-            <div style={{ fontSize:16, fontWeight:700, color:"#C8A96E", fontFamily:"'Georgia',serif" }}>{fmt(totalIngresos+valorPipeline)}</div>
-          </div>
         </div>
       </div>
     </div>
@@ -379,9 +392,24 @@ function Proyectos({ projects, setProjects }) {
         <Btn onClick={() => { setForm(empty); setModal("new"); }}>+ Nuevo proyecto</Btn>
       </div>
 
+      {/* Resumen total */}
+      <div style={{ display:"flex", gap: 12, marginTop: 12 }}>
+        {[
+          { l: "Total contratado", v: fmt(filtrados.reduce((s,p) => s+Number(p.monto),0)) },
+          { l: "Cobrado", v: fmt(filtrados.reduce((s,p) => s+Number(p.adelanto),0)) },
+          { l: "Por cobrar", v: fmt(filtrados.filter(p => !["Entregado","Cancelado"].includes(p.estado)).reduce((s,p) => s+(Number(p.monto)-Number(p.adelanto)),0)) },
+        ].map(k => (
+          <div key={k.l} style={{ background: "#161B22", border:"1px solid #21262D", borderRadius: 8, padding:"10px 14px", flex:1 }}>
+            <div style={{ fontSize:10, color: "#8B949E", textTransform:"uppercase", letterSpacing:0.4, fontWeight:600 }}>{k.l}</div>
+            <div style={{ fontFamily:"'Georgia',serif", fontSize:18, fontWeight:700, color:"#E8E8E8", marginTop:2 }}>{k.v}</div>
+          </div>
+        ))}
+      </div>
+
+
       {/* Filtros */}
       <div style={{ display:"flex", gap: 8, marginBottom: 16, flexWrap:"wrap" }}>
-        {["Todos","Residencial","Comercial","En fabricación","Cotización","Entregado"].map(f => (
+        {["Todos","Fabricación","Instalación","Cotización","Entregado"].map(f => (
           <button key={f} onClick={() => setFiltro(f)} style={{ padding:"5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor:"pointer", border: `1.5px solid ${filtro===f ? C.tinta : "#D0C9C0"}`, background: filtro===f ? "#2D1F00" : "transparent", color: filtro===f ? "#C8A96E" : "#8B949E" }}>
             {f}
           </button>
@@ -416,20 +444,6 @@ function Proyectos({ projects, setProjects }) {
                 <div style={{ background: C.dorado, width: `${pct(p)}%`, height:"100%", borderRadius: 3 }} />
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Resumen total */}
-      <div style={{ display:"flex", gap: 12, marginTop: 12 }}>
-        {[
-          { l: "Total contratado", v: fmt(filtrados.reduce((s,p) => s+Number(p.monto),0)) },
-          { l: "Cobrado", v: fmt(filtrados.reduce((s,p) => s+Number(p.adelanto),0)) },
-          { l: "Por cobrar", v: fmt(filtrados.filter(p => !["Entregado","Cancelado"].includes(p.estado)).reduce((s,p) => s+(Number(p.monto)-Number(p.adelanto)),0)) },
-        ].map(k => (
-          <div key={k.l} style={{ background: "#161B22", border:"1px solid #21262D", borderRadius: 8, padding:"10px 14px", flex:1 }}>
-            <div style={{ fontSize:10, color: "#8B949E", textTransform:"uppercase", letterSpacing:0.4, fontWeight:600 }}>{k.l}</div>
-            <div style={{ fontFamily:"'Georgia',serif", fontSize:18, fontWeight:700, color:"#E8E8E8", marginTop:2 }}>{k.v}</div>
           </div>
         ))}
       </div>
@@ -538,6 +552,7 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
   const totalG = gastos.reduce((s,g) => s+Number(g.monto), 0);
   const margen = totalI - totalG;
   const pctMargen = totalI > 0 ? Math.round(margen/totalI*100) : 0;
+  const cuentasPorCobrar = projects.filter(p=>!["Entregado","Cancelado"].includes(p.estado)).reduce((s,p)=>s+(Number(p.monto)-Number(p.adelanto)),0);
 
   // Gastos por categoría
   const porCat = TIPOS_GASTO.map(cat => ({
@@ -589,15 +604,17 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
 
       {syncMsg && <div style={{ background: syncMsg.includes("✅") ? "#EAFAF1" : "#FDECEA", border: `1px solid ${syncMsg.includes("✅") ? "#A9DFBF" : "#F1948A"}`, borderRadius:8, padding:"10px 16px", marginBottom:12, fontSize:13, color: syncMsg.includes("✅") ? "#27AE60" : "#C0392B", fontWeight:600 }}>{syncMsg}</div>}
       {/* KPIs */}
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10, marginBottom:16 }}>
         {[
-          { l:"Ingresos", v: fmt(totalI), c: C.musgo },
-          { l:"Gastos", v: fmt(totalG), c: C.rojo },
-          { l:`Margen ${pctMargen}%`, v: fmt(margen), c: margen >= 0 ? C.dorado : C.rojo },
+          { l:"Ingresos", v:fmt(totalI), c:"#3FB950" },
+          { l:"Gastos", v:fmt(totalG), c:"#F85149" },
+          { l:`Margen ${pctMargen}%`, v:fmt(margen), c:margen>=0?"#C8A96E":"#F85149" },
+          { l:"Por cobrar", v:fmt(cuentasPorCobrar), c:"#58A6FF" },
+          { l:"Por pagar", v:fmt(0), c:"#E3B341" },
         ].map(k => (
-          <div key={k.l} style={{ background: "#161B22", border:"1px solid #21262D", borderRadius:10, padding:"14px 16px" }}>
-            <div style={{ fontSize:10, color: "#8B949E", textTransform:"uppercase", letterSpacing:0.4, fontWeight:600, marginBottom:4 }}>{k.l}</div>
-            <div style={{ fontFamily:"'Georgia',serif", fontSize:22, fontWeight:700, color:k.c }}>{k.v}</div>
+          <div key={k.l} style={{ background:"#161B22", border:"1px solid #21262D", borderRadius:10, padding:"12px 14px" }}>
+            <div style={{ fontSize:9, color:"#8B949E", textTransform:"uppercase", letterSpacing:0.4, fontWeight:600, marginBottom:4 }}>{k.l}</div>
+            <div style={{ fontFamily:"'Georgia',serif", fontSize:18, fontWeight:700, color:k.c }}>{k.v}</div>
           </div>
         ))}
       </div>
@@ -1192,7 +1209,7 @@ export default function App() {
   );
 
   return (
-    <div style={{ fontFamily:"'DM Sans', system-ui, sans-serif", background:"#0D1117", minHeight:"100vh", display:"flex" }}>
+    <div style={{ fontFamily:"'Inter', system-ui, sans-serif", background:"#0D1117", minHeight:"100vh", display:"flex" }}>
 
       {/* OVERLAY móvil */}
       {sidebarOpen && (
@@ -1210,9 +1227,9 @@ export default function App() {
       }}
         className="sidebar">
         <style>{`@media(min-width:768px){.sidebar{transform:translateX(0)!important}}`}</style>
-        <div style={{ padding:"20px 20px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ padding:"16px 20px 14px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <div>
-            <div style={{ fontFamily:"'Georgia',serif", fontSize:18, fontWeight:700, color:"#C8A96E", letterSpacing:1 }}>PÉRTIGA</div>
+            <img src="/logo.png" alt="Pértiga" style={{ height:28, marginBottom:2 }} />
             <div style={{ fontSize:9, color:"#30363D", letterSpacing:1.5, textTransform:"uppercase", marginTop:1 }}>Panel administrativo</div>
           </div>
           <button onClick={()=>setSidebarOpen(false)}
