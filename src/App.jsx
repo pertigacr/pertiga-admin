@@ -530,7 +530,7 @@ function Proyectos({ projects, setProjects }) {
 }
 
 // ── CONTABILIDAD ──────────────────────────────────────────────────────────────
-function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
+function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects, adelantos }) {
   const [tab, setTab] = useState("resumen");
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
@@ -672,6 +672,7 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
         <TabBtn id="resumen" label="Resumen" />
         <TabBtn id="ingresos" label={`Ingresos (${ingresos.length})`} />
         <TabBtn id="gastos" label={`Gastos (${gastos.length})`} />
+        <TabBtn id="adelantos" label={`Adelantos (${adelantos.filter(a=>a.estado!=="anulado").length})`} />
       </div>
 
       {tab === "resumen" && (
@@ -739,6 +740,39 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects }) {
               <div style={{ fontWeight:700, color:"#F85149", fontSize:15 }}>-{fmt(g.monto)}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {tab === "adelantos" && (
+        <div style={{ background: "#161B22", border:"1px solid #21262D", borderRadius:10, overflow:"hidden" }}>
+          {adelantos.length === 0 && (
+            <div style={{ padding:24, textAlign:"center", fontSize:13, color:"#8B949E" }}>Todavía no hay adelantos registrados por Clementina.</div>
+          )}
+          {[...adelantos].sort((a,b) => new Date(b.created_at)-new Date(a.created_at)).map((a, i) => {
+            const esPendiente = a.estado === "pendiente";
+            const esAnulado = a.estado === "anulado";
+            const color = esAnulado ? "#8B949E" : esPendiente ? "#E3B341" : "#3FB950";
+            const etiqueta = esAnulado ? "Anulado" : esPendiente ? "Esperando proyecto" : "Registrado en Zoho";
+            return (
+              <div key={a.id}
+                style={{ padding:"12px 18px", borderBottom: i<adelantos.length-1 ? `1px solid ${C.crema}` : "none", display:"flex", justifyContent:"space-between", alignItems:"center", opacity: esAnulado ? 0.55 : 1 }}
+              >
+                <div>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <span style={{ fontSize:13, fontWeight:600, color:"#E8E8E8", textDecoration: esAnulado ? "line-through" : "none" }}>
+                      {a.proyecto_asignado || "Sin proyecto asignado"}
+                    </span>
+                    <span style={{ background:"#21262D", color, borderRadius:4, padding:"1px 7px", fontSize:10, fontWeight:600 }}>{etiqueta}</span>
+                  </div>
+                  <div style={{ fontSize:11, color:"#8B949E" }}>
+                    {a.cliente_asignado || a.remitente || "Cliente sin identificar"}
+                    {a.fecha_comprobante && ` · comprobante ${a.fecha_comprobante}`}
+                  </div>
+                </div>
+                <div style={{ fontWeight:700, color, fontSize:15 }}>{fmt(a.monto)}</div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -1206,13 +1240,14 @@ export default function App() {
   const [ocs, setOcs]                 = useState([]);
   const [recordatorios, setRecordatorios] = useState([]);
   const [leads, setLeads] = useState([]);
+  const [adelantos, setAdelantos] = useState([]);
   const [meta, setMeta] = useState(2500000);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Load all data from Supabase on mount + auto-refresh every 30s
   useEffect(() => {
     async function loadData() {
-      const [p, i, g, prov, oc, rec, lds] = await Promise.all([
+      const [p, i, g, prov, oc, rec, lds, adel] = await Promise.all([
         supabase.from("proyectos").select("*"),
         supabase.from("ingresos").select("*"),
         supabase.from("gastos").select("*"),
@@ -1220,6 +1255,7 @@ export default function App() {
         supabase.from("ordenes_compra").select("*"),
         supabase.from("recordatorios").select("*"),
         supabase.from("leads").select("*"),
+        supabase.from("adelantos_pendientes").select("*"),
       ]);
       setProjects(p.data || []);
       setIngresos((i.data || []).map(r => ({...r, desc: r.descripcion})));
@@ -1228,6 +1264,7 @@ export default function App() {
       setOcs(oc.data || []);
       setRecordatorios(rec.data || []);
       setLeads(lds.data || []);
+      setAdelantos(adel.data || []);
       setLoading(false);
     }
     loadData();
@@ -1328,7 +1365,7 @@ export default function App() {
           {tab === "dashboard"     && <Dashboard projects={projects} ingresos={ingresos} gastos={gastos} recordatorios={recordatorios} setTab={setTab} meta={meta} setMeta={setMeta} leads={leads} />}
           {tab === "asistente"     && <AsistenteIA projects={projects} ingresos={ingresos} gastos={gastos} recordatorios={recordatorios} proveedores={proveedores} ocs={ocs} leads={leads} meta={meta} />}
           {tab === "proyectos"     && <Proyectos projects={projects} setProjects={setProjects} />}
-          {tab === "contabilidad"  && <Contabilidad ingresos={ingresos} setIngresos={setIngresos} gastos={gastos} setGastos={setGastos} projects={projects} />}
+          {tab === "contabilidad"  && <Contabilidad ingresos={ingresos} setIngresos={setIngresos} gastos={gastos} setGastos={setGastos} projects={projects} adelantos={adelantos} />}
           {tab === "proveedores"   && <Proveedores proveedores={proveedores} setProveedores={setProveedores} ocs={ocs} setOcs={setOcs} />}
           {tab === "recordatorios" && <Tareas supabase={supabase} recordatorios={recordatorios} setRecordatorios={setRecordatorios} projects={projects} />}
           {tab === "leads"         && <LeadTracker leads={leads} setLeads={setLeads} supabase={supabase} />}
