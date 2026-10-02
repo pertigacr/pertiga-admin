@@ -143,14 +143,16 @@ const Btn = ({ children, variant = "primary", ...p }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
-function Dashboard({ projects, ingresos, gastos, recordatorios, setTab, meta, setMeta, leads }) {
+function Dashboard({ projects, ingresos, gastos, recordatorios, setTab, meta, setMeta, leads, porCobrarZoho }) {
   const [calFiltro, setCalFiltro] = useState("Todos");
   const [calMes, setCalMes] = useState(new Date());
   const [editMeta, setEditMeta] = useState(false);
   const [metaInput, setMetaInput] = useState("");
 
   const activos = projects.filter(p => !["Entregado","Cancelado"].includes(p.estado));
-  const porCobrar = activos.reduce((s,p) => s + (Number(p.monto) - Number(p.adelanto)), 0);
+  // Fuente real: saldo de facturas en Zoho (balance > 0). Si todavía no cargó o falló,
+  // cae de respaldo al cálculo viejo basado en la tabla proyectos.
+  const porCobrar = porCobrarZoho ?? activos.reduce((s,p) => s + (Number(p.monto) - Number(p.adelanto)), 0);
   const totalIngresos = ingresos.reduce((s,i) => s+Number(i.monto), 0);
   const totalGastos = gastos.reduce((s,g) => s+Number(g.monto), 0);
   const margen = totalIngresos - totalGastos;
@@ -530,7 +532,7 @@ function Proyectos({ projects, setProjects }) {
 }
 
 // ── CONTABILIDAD ──────────────────────────────────────────────────────────────
-function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects, adelantos }) {
+function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects, adelantos, porCobrarZoho }) {
   const [tab, setTab] = useState("resumen");
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
@@ -601,7 +603,9 @@ function Contabilidad({ ingresos, setIngresos, gastos, setGastos, projects, adel
   const totalG = gastos.reduce((s,g) => s+Number(g.monto), 0);
   const margen = totalI - totalG;
   const pctMargen = totalI > 0 ? Math.round(margen/totalI*100) : 0;
-  const cuentasPorCobrar = projects.filter(p=>!["Entregado","Cancelado"].includes(p.estado)).reduce((s,p)=>s+(Number(p.monto)-Number(p.adelanto)),0);
+  // Fuente real: saldo de facturas en Zoho (balance > 0). Si todavía no cargó o falló,
+  // cae de respaldo al cálculo viejo basado en la tabla proyectos.
+  const cuentasPorCobrar = porCobrarZoho ?? projects.filter(p=>!["Entregado","Cancelado"].includes(p.estado)).reduce((s,p)=>s+(Number(p.monto)-Number(p.adelanto)),0);
 
   // Gastos por categoría
   const porCat = TIPOS_GASTO.map(cat => ({
@@ -1241,6 +1245,7 @@ export default function App() {
   const [recordatorios, setRecordatorios] = useState([]);
   const [leads, setLeads] = useState([]);
   const [adelantos, setAdelantos] = useState([]);
+  const [porCobrarZoho, setPorCobrarZoho] = useState(null); // saldo real en Zoho (suma de balance de invoices > 0)
   const [meta, setMeta] = useState(2500000);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -1267,9 +1272,25 @@ export default function App() {
       setAdelantos(adel.data || []);
       setLoading(false);
     }
+    async function loadPorCobrarZoho() {
+      try {
+        const r = await fetch("/api/zoho", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "get_invoices" }),
+        });
+        const data = await r.json();
+        const total = (data.invoices || []).reduce((s, inv) => s + Number(inv.balance || 0), 0);
+        setPorCobrarZoho(total);
+      } catch (e) {
+        // Si Zoho no responde, dejamos porCobrarZoho en null y cada pantalla usa su
+        // respaldo (tabla proyectos) en vez de mostrar un error.
+      }
+    }
     loadData();
+    loadPorCobrarZoho();
     const interval = setInterval(loadData, 30000);
-    return () => clearInterval(interval);
+    const interval2 = setInterval(loadPorCobrarZoho, 30000);
+    return () => { clearInterval(interval); clearInterval(interval2); };
   }, []);
 
   const pendientes = recordatorios.filter(r => !r.hecho && daysLeft(r.fecha) <= 3).length;
@@ -1362,10 +1383,10 @@ export default function App() {
         <div style={{ maxWidth:960, margin:"0 auto", padding:"28px 24px" }}
           className="main-padding">
         <style>{`@media(max-width:767px){.main-padding{padding:14px 12px!important}}`}</style>
-          {tab === "dashboard"     && <Dashboard projects={projects} ingresos={ingresos} gastos={gastos} recordatorios={recordatorios} setTab={setTab} meta={meta} setMeta={setMeta} leads={leads} />}
+          {tab === "dashboard"     && <Dashboard projects={projects} ingresos={ingresos} gastos={gastos} recordatorios={recordatorios} setTab={setTab} meta={meta} setMeta={setMeta} leads={leads} porCobrarZoho={porCobrarZoho} />}
           {tab === "asistente"     && <AsistenteIA projects={projects} ingresos={ingresos} gastos={gastos} recordatorios={recordatorios} proveedores={proveedores} ocs={ocs} leads={leads} meta={meta} />}
           {tab === "proyectos"     && <Proyectos projects={projects} setProjects={setProjects} />}
-          {tab === "contabilidad"  && <Contabilidad ingresos={ingresos} setIngresos={setIngresos} gastos={gastos} setGastos={setGastos} projects={projects} adelantos={adelantos} />}
+          {tab === "contabilidad"  && <Contabilidad ingresos={ingresos} setIngresos={setIngresos} gastos={gastos} setGastos={setGastos} projects={projects} adelantos={adelantos} porCobrarZoho={porCobrarZoho} />}
           {tab === "proveedores"   && <Proveedores proveedores={proveedores} setProveedores={setProveedores} ocs={ocs} setOcs={setOcs} />}
           {tab === "recordatorios" && <Tareas supabase={supabase} recordatorios={recordatorios} setRecordatorios={setRecordatorios} projects={projects} />}
           {tab === "leads"         && <LeadTracker leads={leads} setLeads={setLeads} supabase={supabase} />}
